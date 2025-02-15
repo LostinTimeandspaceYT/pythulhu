@@ -1,0 +1,26 @@
+# Pythulhu
+
+*An electronic dice roller and character sheet interface for Call of Cthulhu and Pulp Cthulhu 7th edition*
+
+This project uses CircuitPython v9.x.x
+
+> [!note] Work In Progress
+> This is a refactoring of DiceKracken, a now defunct project.
+
+More to come in the following months:
+
+## Hardware Used
+
+Main Board: [Adafruit Metro RP2040](https://www.adafruit.com/product/5786)
+
+Display: [2.8" TFT Touch Shield](https://www.adafruit.com/product/1651)
+
+Encoder: [I2C Stemma QT Encoder Breakout](https://www.adafruit.com/product/5880)
+
+## Chaosium's Fan Material Policy  
+
+“This application uses trademarks and/or copyrights owned by Chaosium Inc/Moon Design Publications LLC, which are used under Chaosium Inc’s Fan Material Policy.
+We are expressly prohibited from charging you to use or access this content. This application is not published, endorsed, or specifically approved by Chaosium Inc.
+For more information about Chaosium Inc’s products, please visit [www.chaosium.com].”
+
+[Link:](https://www.chaosium.com/fan-material-policy/)
