@@ -7,7 +7,7 @@ __copyright__ = "MIT"
 
 from random import seed, randint
 
-seed()
+seed(0)
 
 
 class Dice:
