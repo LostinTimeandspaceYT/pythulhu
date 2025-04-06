@@ -79,8 +79,14 @@ class HAL:
         display.root_group[group_index].text = text
 
     @classmethod
-    def display_image(cls, img_path: str) -> None:
-        pass
+    def display_image(cls, img_name: str) -> None:
+        img = FileManager.get_image_path(img_name)
+        if img is not None:
+            splash = displayio.Group()
+            bitmap = displayio.OnDiskBitmap(img)
+            tile_grid = displayio.TileGrid(bitmap, pixel_shader=bitmap.pixel_shader)
+            splash.append(tile_grid)
+            display.root_group = splash
 
     @classmethod
     def main_splash(cls):
@@ -149,7 +155,6 @@ class HAL:
         # TODO: refactor to use Adafuit Slideshow.
         logo = FileManager.get_image_path("LogoLTS")
         pythulhu = FileManager.get_image_path("pythulhu")
-        splash = displayio.Group()
         groups = []
         images = [logo, pythulhu]
 
