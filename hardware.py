@@ -94,7 +94,7 @@ class HAL:
 
     @classmethod
     def is_button_pressed(cls) -> bool:
-        return button.value
+        return not button.value
 
     @classmethod
     def get_encoder_position(cls) -> int:

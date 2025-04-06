@@ -35,7 +35,7 @@ while True:
     if position != last_position:
         tmp = position % len(ana.skills)
         pos_text_area.text = f"{ana.skills[tmp]}: {ana.get_value_at(ana.skills[tmp])}"
-        if HAL.is_button_pressed():
+        if not HAL.is_button_pressed():
             # Change the LED color.
             if position > last_position:  # Advance forward through the colorwheel.
                 color += 1
@@ -46,6 +46,7 @@ while True:
 
         else:  # If the button is pressed...
             # ...change the brightness.
+            pos_text_area.text += f"\nRolled: {ana.roll_skill(0,0)}"
             if position > last_position:
                 HAL.increase_all_pixel_brightness()
 
