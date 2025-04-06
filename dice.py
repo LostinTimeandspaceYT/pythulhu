@@ -11,19 +11,31 @@ seed(0)
 
 
 class Dice:
+    """A collection of classmethods class for games to use for their own needs.
+
+    NOTE: It is not intended for users to create instances of Dice, only to
+    roll them as needed. for an example of this behavior, check coc_dice.py
+    """
 
     @classmethod
     def roll(cls, num_dice: int, num_sides: int) -> int:
+        """Rolls a number of the same kind of die and returns the sum.
+
+        e.g.
+        1d20, or 2d4
+
+        Args:
+            num_dice (int): number of dice to roll
+            num_sides (int): number of sides per dice
+
+        Returns:
+            int: result of the die roll
+        """
         return sum([randint(1, num_sides) for _ in range(num_dice)])
-        # result = 0
-        # for _ in range(num_dice):
-        #     result += randint(1, num_sides)
-        # return result
 
     @classmethod
     def roll_multiple(cls, dice: list[tuple]) -> int:
-        """
-        Rolls multiple different kinds of dice.
+        """Rolls multiple different kinds of dice and returns the sum
 
         e.g.
         1d10 + 1d4
@@ -31,38 +43,3 @@ class Dice:
         :param: dice is a list of 2 element tuples (num_dice, num_sides)
         """
         return sum(cls.roll(*die) for die in dice)
-        # result = 0
-        # for die in dice:
-        #     result += cls.roll(*die)
-        # return result
-
-
-class CthulhuDice(Dice):
-
-    @classmethod
-    def roll_skill(cls, bonus: int, penalty: int) -> int:
-        """
-        Rolls a single ones digit die, along with n+1 tens dice
-        where n is the abs(bonus - penalty)
-
-        :param: number of bonus dice
-        :param: number of penalty dice
-        """
-        modifier: int = abs(bonus - penalty)
-        if modifier == 0:
-            return randint(1, 100)
-        else:
-            ones_digit = randint(0, 9)
-            tens_place = [
-                randint(0, 9) * 10,
-            ]
-            for _ in range(modifier):
-                tens_place.append(randint(0, 9) * 10)
-
-            tens_place.sort()
-            tens_place = list(set(tens_place))
-            tens_digit = tens_place[0] if bonus > penalty else tens_place[-1]
-
-            if (tens_digit + ones_digit) == 0:
-                return tens_place[1] if bonus > penalty else 100
-            return tens_digit + ones_digit

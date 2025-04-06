@@ -1,5 +1,5 @@
 from player_character import PlayerCharacter
-from dice import CthulhuDice
+from coc_dice import CthulhuDice
 
 class CthulhuCharacter(PlayerCharacter):
 
