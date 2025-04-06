@@ -1,32 +1,5 @@
-"""
-Module for Character sheet manipulation 
-"""
-
-__author__ = "Nathan Winslow"
-__copyright__ = "MIT"
-
-from json_parser import JSONParser
+from player_character import PlayerCharacter
 from dice import CthulhuDice
-
-
-class PlayerCharacter:
-    def __init__(self, fpath: str):
-        self.character_sheet = JSONParser.load_json_file(fpath)
-
-    def __call__(self):
-        return self.character_sheet
-
-    def get_value_at(self, key: str):
-        return JSONParser.get_value_at_key(self.character_sheet, key)
-
-    @property
-    def age(self):
-        return self.character_sheet["Age"]
-
-    @property
-    def name(self):
-        return self.character_sheet["Name"]
-
 
 class CthulhuCharacter(PlayerCharacter):
 
@@ -110,7 +83,7 @@ class CthulhuCharacter(PlayerCharacter):
 
     @property
     def skills(self):
-        return JSONParser.get_keys(self.character_sheet["Skills"])
+        return self.get_keys(self.character_sheet["Skills"])
 
     @property
     def weapons(self):
@@ -149,4 +122,4 @@ class PulpCharacter(CthulhuCharacter):
 
     @property
     def talents(self):
-        return JSONParser.get_keys(self.character_sheet["Pulp Talents"])
+        return self.get_keys(self.character_sheet["Pulp Talents"])

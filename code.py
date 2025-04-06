@@ -2,14 +2,13 @@ import terminalio
 import displayio
 from adafruit_display_text import label
 from hardware import HAL
-from character_sheet import PulpCharacter
+from coc_character import PulpCharacter
 from file_manager import FileManager
 
 FileManager.mount_sdcard()
 ana_path = FileManager.get_character_path("pulp_cthulhu", "ana_engel")
 ana = PulpCharacter(ana_path)
 
-HAL.show_credits_screen()
 HAL.draw_main_background()
 
 # Draw a label
