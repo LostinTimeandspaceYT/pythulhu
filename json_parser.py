@@ -48,7 +48,7 @@ class JSONParser:
         for k, v in d.items():
             ret_str = "  " * indent + str(k)
             yield ret_str
-            if isinstance(v, dict):
+            if isinstance(v, dict) or isinstance(v, OrderedDict):
                 yield from cls.pretty_print_keys(v, indent + 1)
 
     @classmethod
