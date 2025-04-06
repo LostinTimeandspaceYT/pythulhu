@@ -5,14 +5,15 @@ from hardware import HAL
 from coc_character import PulpCharacter
 from file_manager import FileManager
 
-from sprite_example import run_example
-
-run_example()
-
 FileManager.mount_sdcard()
+
+# from sprite_example import run_example
+# run_example()
+
 ana_path = FileManager.get_character_path("pulp_cthulhu", "ana_engel")
 ana = PulpCharacter(ana_path)
 
+HAL.show_credits_screen()
 HAL.draw_main_background()
 
 # Draw a label

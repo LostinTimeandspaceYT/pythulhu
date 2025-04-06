@@ -2,6 +2,7 @@ import board
 import displayio
 import adafruit_tsc2007
 import adafruit_ili9341
+from adafruit_imageload import load as load_image
 import neopixel as np
 from file_manager import FileManager
 
@@ -54,7 +55,6 @@ display = adafruit_ili9341.ILI9341(display_bus, width=DISPLAY_WIDTH, height=DISP
 # Make the display context
 # TODO: Decide if main_splash should be global
 main_display_group = displayio.Group()
-display.root_group = main_display_group
 
 irq_dio = None
 # TODO: Game interface component
@@ -80,13 +80,30 @@ class HAL:
 
     @classmethod
     def display_image(cls, img_name: str) -> None:
-        img = FileManager.get_image_path(img_name)
-        if img is not None:
-            splash = displayio.Group()
-            bitmap = displayio.OnDiskBitmap(img)
+        img_path = FileManager.get_image_path(img_name)
+        if img_path is not None:
+            bitmap = displayio.OnDiskBitmap(img_path)
             tile_grid = displayio.TileGrid(bitmap, pixel_shader=bitmap.pixel_shader)
-            splash.append(tile_grid)
-            display.root_group = splash
+            cls.main_splash().append(tile_grid)
+    
+    @classmethod
+    def create_sprite(cls, 
+        sprite_name: str, 
+        sprite_width: int,
+        sprite_height: int
+    ) -> displayio.TileGrid:
+
+        path = FileManager.get_image_path(sprite_name)
+        if path is not None:
+            sprite_sheet, palette = load_image(path, bitmap=displayio.Bitmap, palette=displayio.Palette)
+
+            sprite = displayio.TileGrid(sprite_sheet, pixel_shader=palette,
+                                        width= 1,
+                                        height= 1,
+                                        tile_width= sprite_width,
+                                        tile_height=sprite_height)
+            return sprite
+
 
     @classmethod
     def main_splash(cls):
