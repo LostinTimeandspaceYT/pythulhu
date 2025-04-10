@@ -48,7 +48,6 @@ tft_dc = board.D9
 
 DISPLAY_WIDTH = 320
 DISPLAY_HEIGHT = 240
-
 display_bus = FourWire(spi, command=tft_dc, chip_select=tft_cs, reset=tft_rst)
 display = adafruit_ili9341.ILI9341(display_bus, width=DISPLAY_WIDTH, height=DISPLAY_HEIGHT)
 
@@ -85,23 +84,26 @@ class HAL:
             bitmap = displayio.OnDiskBitmap(img_path)
             tile_grid = displayio.TileGrid(bitmap, pixel_shader=bitmap.pixel_shader)
             cls.main_splash().append(tile_grid)
-    
+
     @classmethod
-    def create_sprite(cls, 
-        sprite_name: str, 
-        sprite_width: int,
-        sprite_height: int
+    def create_sprite(cls,
+        name: str,
+        width: int,
+        height: int
     ) -> displayio.TileGrid:
 
-        path = FileManager.get_image_path(sprite_name)
+        path = FileManager.get_image_path(name)
         if path is not None:
             sprite_sheet, palette = load_image(path, bitmap=displayio.Bitmap, palette=displayio.Palette)
 
-            sprite = displayio.TileGrid(sprite_sheet, pixel_shader=palette,
-                                        width= 1,
-                                        height= 1,
-                                        tile_width= sprite_width,
-                                        tile_height=sprite_height)
+            sprite = displayio.TileGrid(
+                sprite_sheet, 
+                pixel_shader=palette,
+                width= 1,
+                height= 1,
+                tile_width= width,
+                tile_height=height
+            )
             return sprite
 
 
