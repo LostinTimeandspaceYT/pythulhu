@@ -21,7 +21,7 @@ class JSONParser:
     def sort_json_file(cls, d: dict):
         sorted_file = OrderedDict(sorted(d.items()))
         for k, v in sorted_file.items():
-            if isinstance(v, dict):
+            if isinstance(v, dict) or isinstance(v, OrderedDict):
                 sorted_dict = cls.sort_json_file(v)
                 sorted_file.update({k: sorted_dict})
         return sorted_file
@@ -54,7 +54,7 @@ class JSONParser:
     @classmethod
     def get_all_vals(cls, d: dict):
         for v in d.values():
-            if isinstance(v, dict):
+            if isinstance(v, dict) or isinstance(v, OrderedDict):
                 yield from cls.get_all_vals(v)
             else:
                 yield v
@@ -79,7 +79,7 @@ class JSONParser:
             return d[key]
 
         for v in d.values():
-            if isinstance(v, dict):
+            if isinstance(v, dict) or isinstance(v, OrderedDict):
                 value = cls.get_value_at_key(v, key)
                 if (
                     value is not None
