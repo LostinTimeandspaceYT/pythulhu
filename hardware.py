@@ -91,7 +91,13 @@ class HAL:
 
     @classmethod
     def clear_display(cls):
-        cls.display.root_group[:] = []
+        while len(cls.root_group) > 0:
+            cls.root_group.pop()
+
+    @classmethod
+    def reset_display(cls):
+        cls.root_group = displayio.Group()
+        cls.display.root_group = cls.root_group  # reattach if necessary
 
     @classmethod
     def clear_text(cls):
