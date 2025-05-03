@@ -27,7 +27,7 @@ class JSONParser:
         return sorted_file
 
     @classmethod
-    def pretty_print_keys(cls, d: dict, indent=0, ret_str=""):
+    def pretty_print_keys(cls, d: dict, indent=0):
         """
         Helper for nested dictionary keys to screens.
 
@@ -46,42 +46,46 @@ class JSONParser:
                 Shotgun
         """
         for k, v in d.items():
-            ret_str = "  " * indent + str(k)
-            yield ret_str
-            if isinstance(v, dict) or isinstance(v, OrderedDict):
+            yield "  " * indent + str(k)
+            if isinstance(v, (dict, OrderedDict)):
                 yield from cls.pretty_print_keys(v, indent + 1)
 
     @classmethod
     def get_all_vals(cls, d: dict):
         for v in d.values():
-            if isinstance(v, dict) or isinstance(v, OrderedDict):
+            if isinstance(v, (dict, OrderedDict)):
                 yield from cls.get_all_vals(v)
             else:
                 yield v
 
     @classmethod
     def get_keys(cls, d: dict) -> list[str]:
-        keys = []
-        for key in cls.pretty_print_keys(d):
-            keys.append(key)
-        return keys
+        return list(cls.pretty_print_keys(d))
 
     @classmethod
     def get_vals(cls, d: dict) -> list:
-        vals = []
-        for value in cls.get_all_vals(d):
-            vals.append(value)
-        return vals
+        return list(cls.get_all_vals(d))
 
     @classmethod
     def get_value_at_key(cls, d: dict, key: str):
         if key in d:
-            return d[key]
+            return "v" if isinstance(d[key], (dict, OrderedDict)) else d[key]
 
         for v in d.values():
-            if isinstance(v, dict) or isinstance(v, OrderedDict):
+            if isinstance(v, (dict, OrderedDict)):
                 value = cls.get_value_at_key(v, key)
-                if (
-                    value is not None
-                ):  # the value could be 0, which we do want to return
+                if value is not None:
                     return value
+    
+    @classmethod
+    def flatten_keys(cls, d: dict, parent_key="", sep=" -> ", out=None):
+        if out is None:
+            out = {}
+        for k, v in d.items():
+            full_key = f"{parent_key}{sep}{k}" if parent_key else str(k)
+            if isinstance(v, (dict, OrderedDict)):
+                out[full_key] = "v"
+                cls.flatten_keys(v, full_key, sep=sep, out=out)
+            else:
+                out[full_key] = v
+        return out

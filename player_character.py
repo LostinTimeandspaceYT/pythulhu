@@ -14,10 +14,7 @@ class PlayerCharacter:
     """
 
     def __init__(self, fpath: str):
-        self.character_sheet = JSONParser.load_json_file(fpath)
-
-    def __call__(self):
-        return self.character_sheet
+        self._sheet = JSONParser.load_json_file(fpath)
 
     def get_value_at(self, key: str) -> any:
         """searches through `character_sheet` for an entry at `key` and
@@ -31,7 +28,7 @@ class PlayerCharacter:
         Returns:
             any: value at key if it exists, None otherwise
         """
-        return JSONParser.get_value_at_key(self.character_sheet, key)
+        return JSONParser.get_value_at_key(self._sheet, key)
 
     def get_keys(self, d: dict) -> list[str]:
         """Helper method to get a list of keys, such as skills
@@ -46,9 +43,13 @@ class PlayerCharacter:
         return JSONParser.get_keys(d)
 
     @property
+    def sheet(self):
+        return self._sheet
+
+    @property
     def age(self):
-        return self.character_sheet["Age"]
+        return self._sheet["Age"]
 
     @property
     def name(self):
-        return self.character_sheet["Name"]
+        return self._sheet["Name"]
