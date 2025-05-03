@@ -1,9 +1,7 @@
-import terminalio
-import displayio
-from adafruit_display_text import label
 from hardware import HAL
 from coc_character import PulpCharacter
 from file_manager import FileManager
+from time import sleep
 
 FileManager.mount_sdcard()
 
@@ -13,25 +11,11 @@ FileManager.mount_sdcard()
 ana_path = FileManager.get_character_path("pulp_cthulhu", "ana_engel")
 ana = PulpCharacter(ana_path)
 
-HAL.show_credits_screen()
-HAL.draw_main_background()
+HAL.init()
+print(ana)
 
-# Draw a label
-text_group = displayio.Group(scale=3, x=40, y=40)
-text = f"{ana.name}"
-text_area = label.Label(terminalio.FONT, text=text, color=0xFFFF00)
-text_group.append(text_area)  # Subgroup for text scaling
-HAL.main_splash().append(text_group)
-
-# Draw another label
-pos_text_group = displayio.Group(scale=2, x=40, y=80)
-pos_text = "Skill:"
-pos_text_area = label.Label(terminalio.FONT, text=pos_text, color=0xFFFF00)
-pos_text_group.append(pos_text_area)
-HAL.main_splash().append(pos_text_group)
-
-last_position = -1
-color = 0  # start at red
+last_position = 0
+color = 0
 
 while True:
     # negate the position to make clockwise rotation positive
@@ -39,7 +23,7 @@ while True:
 
     if position != last_position:
         tmp = position % len(ana.skills)
-        pos_text_area.text = f"{ana.skills[tmp]}: {ana.get_value_at(ana.skills[tmp])}"
+        print(f"{ana.skills[tmp]}: {ana.get_value_at(ana.skills[tmp])}")
         if not HAL.is_button_pressed():
             # Change the LED color.
             if position > last_position:  # Advance forward through the colorwheel.
@@ -51,7 +35,6 @@ while True:
 
         else:  # If the button is pressed...
             # ...change the brightness.
-            pos_text_area.text += f"\nRolled: {ana.roll_skill(0,0)}"
             if position > last_position:
                 HAL.increase_all_pixel_brightness()
 
