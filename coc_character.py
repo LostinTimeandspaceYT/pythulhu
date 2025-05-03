@@ -1,21 +1,32 @@
 from player_character import PlayerCharacter
 from coc_dice import CthulhuDice
 
+CHAR = "Characteristics"
+HP = "Hit Points"
+MP = "Magic Points"
+SAN = "Sanity"
+
 class CthulhuCharacter(PlayerCharacter):
 
     def __init__(self, fpath: str):
         super().__init__(fpath)
         self.prev_skill_modifier: int = 0  # used when pushing rolls.
         self.current_weapon: dict = {}
-        self.db: tuple = self.damage_bonus()
         self.skills_to_improve: list[str] = []  # Used during Development phase
+
+    def str_plus_siz(self) -> int:
+        return (
+            self.characteristics["STR"]
+            + self.characteristics["SIZ"]
+        )
+
+    def __str__(self):
+        return f"{self.name} ({self.pronoun}) — HP: {self.current_hp}, SAN: {self.current_sanity}, MP: {self.current_mp}"
+
 
     def damage_bonus(self) -> tuple:
         """Returns a tuple (num_dice, num_side) such that -2 and -1 are const"""
-        val = (
-            self.character_sheet["Characteristics"]["STR"]
-            + self.character_sheet["Characteristics"]["SIZ"]
-        )
+        val = self.str_plus_siz()
         if val <= 64:
             return (-2, 1)
         elif 65 <= val <= 84:
@@ -41,69 +52,67 @@ class CthulhuCharacter(PlayerCharacter):
         return CthulhuDice.roll_skill(bonus_die, penalty_die)
 
     def get_skill_at_difficulty(self, skill_val: int, level: str) -> int:
-        if level == "Hard":
-            return skill_val // 2
-        elif level == "Extreme":
-            return skill_val // 5
-        else:
-            return skill_val
+        scale = {"Normal": 1, "Hard": 0.5, "Extreme": 0.2}
+        return int(skill_val * scale.get(level, 1))
 
     def get_fumble(self, skill_val):
         return 100 if skill_val >= 50 else 96
 
     def change_hit_points(self, amount: int):
-        """
-        For regaining hit points, pass in a
-        positive integer.
-        For taking damage, pass in a negative
-        integer.
-        """
-        self.character_sheet["Characteristics"]["Hit Points"]["Current"] += amount
+        self.sheet[CHAR][HP]["Current"] += amount
 
     def change_magic_points(self, amount: int):
-        """same behavior as change_hit_points"""
-        self.character_sheet["Characteristics"]["Magic Points"]["Current"] += amount
+        self.sheet[CHAR][MP]["Current"] += amount
 
     def change_sanity(self, amount: int):
-        """same behavior as change_hit_points"""
-        self.character_sheet["Characteristics"]["Sanity"]["Current"] += amount
+        self.sheet[CHAR][SAN]["Current"] += amount
 
     def get_weapon_names(self):
-        w_names = []
-        for i in range(1, len(self.weapons) + 1):
-            w_names.append(self.weapons[f"Weapon {i}"]["Name"])
-        return w_names
+        return [weapon["Name"] for weapon in self.weapons.values()]
 
     def set_current_weapon(self, selection: int):
-        self.current_weapon = self.weapons[f"Weapon {selection}"]
+        keys = list(self.weapons.keys())
+        if 0 <= selection < len(keys):
+            self.current_weapon = self.weapons[keys[selection]]
+        else:
+            raise IndexError("Invalid weapon selection")
+
+    @property
+    def characteristics(self):
+        return self.sheet[CHAR]
 
     @property
     def pronoun(self):
-        return self.character_sheet["Pronoun"]
+        return self.sheet["Pronoun"]
 
     @property
     def skills(self):
-        return self.get_keys(self.character_sheet["Skills"])
+        return self.get_keys(self.sheet["Skills"])
+
+    @property
+    def db(self):
+        return self.damage_bonus()
 
     @property
     def weapons(self):
-        return self.character_sheet["Combat"]["Weapons"]
+        return self.sheet["Combat"]["Weapons"]
 
     @property
     def current_sanity(self):
-        return self.character_sheet["Characteristics"]["Sanity"]["Current"]
+        return self.sheet[CHAR][SAN]["Current"]
 
     @property
     def current_hp(self):
-        return self.character_sheet["Characteristics"]["Hit Points"]["Current"]
+        return self.characteristics[HP]["Current"]
 
     @property
     def current_mp(self):
-        return self.character_sheet["Characteristics"]["Magic Points"]["Current"]
+        return self.characteristics[MP]["Current"]
 
     @property
     def current_luck(self):
-        return self.character_sheet["Characteristics"]["Luck"]
+        return self.characteristics["Luck"]
+
 
 
 class PulpCharacter(CthulhuCharacter):
@@ -114,12 +123,12 @@ class PulpCharacter(CthulhuCharacter):
     # Modifiers
     def change_luck(self, amount: int):
         """similar to other change methods"""
-        self.character_sheet["Characteristics"]["Luck"] += amount
+        self.characteristics["Luck"] += amount
 
     @property
     def archetype(self):
-        return self.character_sheet["Archetype"]
+        return self.sheet["Archetype"]
 
     @property
     def talents(self):
-        return self.get_keys(self.character_sheet["Pulp Talents"])
+        return self.get_keys(self.sheet["Pulp Talents"])
