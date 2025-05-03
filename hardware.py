@@ -2,9 +2,12 @@ import board
 import displayio
 import adafruit_tsc2007
 import adafruit_ili9341
+import terminalio
 from adafruit_imageload import load as load_image
+from adafruit_display_text import label
 import neopixel as np
 from file_manager import FileManager
+from time import sleep
 
 # For the rotary Encoder
 from rainbowio import colorwheel
@@ -16,49 +19,18 @@ try:
 except ImportError:
     from displayio import FourWire
 
-seesaw = seesaw.Seesaw(board.STEMMA_I2C(), addr=0x36)
-seesaw_product = (seesaw.get_version() >> 16) & 0xFFFF
-
 DEBUG = False
-if DEBUG:
-    print("Found product {}".format(seesaw_product))
-    if seesaw_product != 4991:
-        print("Wrong firmware loaded?  Expected 4991")
-
-# Configure seesaw pin used to read knob button presses
-# The internal pull up is enabled to prevent floating input
-seesaw.pin_mode(24, seesaw.INPUT_PULLUP)
-
-button = digitalio.DigitalIO(seesaw, 24)
-encoder = rotaryio.IncrementalEncoder(seesaw)
-pixel = neopixel.NeoPixel(seesaw, 6, 1)
-pixel.brightness = 0.5
-
-# Metro's on-board Neopixel
-board_pixel = np.NeoPixel(board.NEOPIXEL, 1)
-board_pixel.brightness = 0.5
 
 # Release any resources currently in use for the displays
 displayio.release_displays()
-
-spi = board.SPI()
-tft_cs = board.D10
-tft_rst = board.D6
-tft_dc = board.D9
-
 DISPLAY_WIDTH = 320
 DISPLAY_HEIGHT = 240
-display_bus = FourWire(spi, command=tft_dc, chip_select=tft_cs, reset=tft_rst)
-display = adafruit_ili9341.ILI9341(display_bus, width=DISPLAY_WIDTH, height=DISPLAY_HEIGHT)
-
-# Make the display context
-# TODO: Decide if main_splash should be global
-main_display_group = displayio.Group()
-
-irq_dio = None
-# TODO: Game interface component
-tsc = adafruit_tsc2007.TSC2007(board.I2C(), irq=irq_dio)
-
+COLORS = {
+    "fail": 0xFF0000,
+    "success": 0x00FF00,
+    "neutral": 0xFFFFFF,
+    "skill": 0x0000FF
+}
 
 class HAL:
     """
@@ -68,22 +40,85 @@ class HAL:
     TODO: Decide how games should display stuff.
     TODO: Add touch screen interface.
     """
+    seesaw = None
+    display = None
+    root_group = None
+    encoder = None
+    button = None
+    pixel = None
+    board_pixel = None
+    tsc = None
+    irq_dio = None
+
+    @classmethod
+    def init(cls):
+        cls.seesaw = seesaw.Seesaw(board.STEMMA_I2C(), addr=0x36)
+        seesaw_product = (cls.seesaw.get_version() >> 16) & 0xFFFF
+        if DEBUG:
+            print("Found product {}".format(seesaw_product))
+            if seesaw_product != 4991:
+                print("Wrong firmware loaded?  Expected 4991")
+
+        # Configure seesaw pin used to read knob button presses
+        # The internal pull up is enabled to prevent floating input
+        cls.seesaw.pin_mode(24, cls.seesaw.INPUT_PULLUP)
+
+        # Initialize Rotary Encoder
+        cls.button = digitalio.DigitalIO(cls.seesaw, 24)
+        cls.encoder = rotaryio.IncrementalEncoder(cls.seesaw)
+        cls.pixel = neopixel.NeoPixel(cls.seesaw, 6, 1)
+        cls.pixel.brightness = 0.5
+
+        # Metro's on-board Neopixel
+        cls.board_pixel = np.NeoPixel(board.NEOPIXEL, 1)
+        cls.board_pixel.brightness = 0.5
+
+        # Initialize Display
+        spi = board.SPI()
+        tft_cs = board.D10
+        tft_rst = board.D6
+        tft_dc = board.D9
+        display_bus = FourWire(spi, command=tft_dc, chip_select=tft_cs, reset=tft_rst)
+        cls.display = adafruit_ili9341.ILI9341(display_bus, width=DISPLAY_WIDTH, height=DISPLAY_HEIGHT)
+        cls.root_group = displayio.Group()
+        cls.display.root_group = cls.root_group 
+        cls.irq_dio = None
+        cls.tsc = adafruit_tsc2007.TSC2007(board.I2C(), irq=cls.irq_dio)
 
     @classmethod
     def rotate_display(cls, degrees: int)-> None:
-        display.rotation = degrees
+        cls.display.rotation = degrees
+
+    @classmethod
+    def clear_display(cls):
+        cls.display.root_group[:] = []
+
+    @classmethod
+    def clear_text(cls):
+        for group in cls.display.root_group:
+            if isinstance(group[0], label.Label):
+                group[0].text = ""
 
     @classmethod
     def display_text(cls, group_index: int, text: str) -> None:
-        display.root_group[group_index].text = text
+        cls.ensure_text_group(group_index)
+        cls.display.root_group[group_index][0].text = text
+
+    @classmethod
+    def display_multiline(cls, lines: list[str], start_y=0, line_height=20):
+        cls.clear_display()
+        for i, line in enumerate(lines):
+            txt = label.Label(terminalio.FONT, text=line, color=0xFFFFFF, x=0, y=start_y + i * line_height)
+            cls.display.root_group.append(txt)
 
     @classmethod
     def display_image(cls, img_name: str) -> None:
         img_path = FileManager.get_image_path(img_name)
         if img_path is not None:
+            cls.clear_display()
             bitmap = displayio.OnDiskBitmap(img_path)
             tile_grid = displayio.TileGrid(bitmap, pixel_shader=bitmap.pixel_shader)
-            cls.main_splash().append(tile_grid)
+            cls.root_group.append(tile_grid)
 
     @classmethod
     def create_sprite(cls,
@@ -106,41 +141,56 @@ class HAL:
             )
             return sprite
 
+    @classmethod
+    def ensure_text_group(cls, index: int, color=0xFFFFFF, font=terminalio.FONT, x=0, y=0):
+        if len(cls.root_group) <= index:
+            for _ in range(index - len(cls.root_group) + 1):
+                cls.root_group.append(displayio.Group())
+            cls.root_group[index].append(
+                label.Label(font=font, text="", color=color, x=x, y=y)
+            )
 
     @classmethod
     def main_splash(cls):
-        return display.root_group
+        return cls.root_group
 
     @classmethod
     def is_button_pressed(cls) -> bool:
-        return not button.value
+        return not cls.button.value
 
     @classmethod
     def get_encoder_position(cls) -> int:
-        return encoder.position
+        return cls.encoder.position
 
     @classmethod
     def fill_pixel(cls, color: int) -> None:
-        pixel.fill(colorwheel(color))
+        cls.pixel.fill(colorwheel(color))
 
     @classmethod
     def fill_metro_pixel(cls, color: int) -> None:
-        board_pixel.fill(colorwheel(color))
+        cls.board_pixel.fill(colorwheel(color))
 
     @classmethod
     def fill_all_pixels(cls, color: int) -> None:
-        pixel.fill(colorwheel(color))
-        board_pixel.fill(colorwheel(color))
+        cls.pixel.fill(colorwheel(color))
+        cls.board_pixel.fill(colorwheel(color))
 
     @classmethod
     def increase_all_pixel_brightness(cls) -> None:
-        pixel.brightness = min(1.0, pixel.brightness + 0.1)
-        board_pixel.brightness = min(1.0, pixel.brightness + 0.1)
+        cls.pixel.brightness = min(1.0, cls.pixel.brightness + 0.1)
+        cls.board_pixel.brightness = min(1.0, cls.pixel.brightness + 0.1)
 
     @classmethod
     def decrease_all_pixel_brightness(cls) -> None:
-        pixel.brightness = max(0, pixel.brightness - 0.1)
-        board_pixel.brightness = max(0, pixel.brightness - 0.1)
+        cls.pixel.brightness = max(0, cls.pixel.brightness - 0.1)
+        cls.board_pixel.brightness = max(0, cls.pixel.brightness - 0.1)
+
+    @classmethod
+    def get_touch(cls):
+        if cls.tsc.touched:
+            point = cls.tsc.touch
+            return (point["x"], point["y"])
+        return None
 
     @classmethod
     def draw_main_background(cls):
@@ -150,8 +200,6 @@ class HAL:
 
         TODO: allow for customization
         """
-        display.root_group = main_display_group
-
         # Draw a green background
         color_bitmap = displayio.Bitmap(DISPLAY_HEIGHT, DISPLAY_WIDTH, 1)
         color_palette = displayio.Palette(1)
@@ -159,15 +207,15 @@ class HAL:
 
         bg_sprite = displayio.TileGrid(color_bitmap, pixel_shader=color_palette, x=0, y=0)
 
-        main_display_group.append(bg_sprite)
+        cls.root_group.append(bg_sprite)
 
         # Draw a smaller inner rectangle
         inner_bitmap = displayio.Bitmap(220, 150, 1)
         inner_palette = displayio.Palette(1)
         inner_palette[0] = 0xAA0088  # Purple
         inner_sprite = displayio.TileGrid(inner_bitmap, pixel_shader=inner_palette, x=10, y=10)
-        main_display_group.append(inner_sprite)
-        display.rotation = 270
+        cls.root_group.append(inner_sprite)
+        cls.display.rotation = 270
 
     @classmethod
     def show_credits_screen(cls):
@@ -186,10 +234,10 @@ class HAL:
 
         index = 0
         touch_state = False
-        display.root_group = groups[index]
+        cls.display.root_group = groups[index]
         while True:
-            if tsc.touched and not touch_state:
-                point = tsc.touch
+            if cls.tsc.touched and not touch_state:
+                point = cls.tsc.touch
                 touch_state = True
                 if point["pressure"] < 200:  # ignore touches with no 'pressure' as false
                     continue
@@ -203,6 +251,6 @@ class HAL:
                     if (index == 0):
                         break
 
-                display.root_group = groups[index]
-            if not tsc.touched and touch_state:
+                cls.display.root_group = groups[index]
+            if not cls.tsc.touched and touch_state:
                 touch_state = False
