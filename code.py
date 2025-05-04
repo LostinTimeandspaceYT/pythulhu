@@ -1,39 +1,44 @@
+import gc
+import time
 from hardware import HAL
+from touch_ui import TouchManager, TouchButton
 from coc_character import PulpCharacter
 from file_manager import FileManager
-from touch_ui import TouchManager, TouchRegion, TouchButton
-import time
+from calibrator import Calibrator
 
-FileManager.mount_sdcard()
-
-# from sprite_example import run_example
-# run_example()
-
-ana_path = FileManager.get_character_path("pulp_cthulhu", "ana_engel")
-ana = PulpCharacter(ana_path)
+# FileManager.mount_sdcard()
+# ana_path = FileManager.get_character_path("pulp_cthulhu", "ana_engel")
+# ana = PulpCharacter(ana_path)
+# print(ana)
 
 HAL.init()
-print(ana)
-
-last_position = 0
-color = 0
-
 touch_ui = TouchManager(HAL.tsc)
+touch_ui.draw_coordinate_overlay(HAL.root_group)
 
-def on_inventory_tap(pos):
-    print("Touched inventory:", pos)
+# Callback
+def on_pressed(btn):
+    print(f"{btn.name} pressed!")
+    print(HAL.get_touch())
 
-def on_stats_touch(pos):
-    print("Touched stats:", pos)
+btn_inv = TouchButton("inventory", 20, 100, 67, 50, "Inventory", on_pressed, toggle=True)
+btn_inv.attach_to(HAL.root_group)
+btn_inv.register(touch_ui)
+btn_inv.show_debug_bounds(HAL.root_group)
 
-# NOTE: for a good feel for a region, remember x = 1.33 * y
-btn = TouchButton("inventory", 10, 200, 140, 30, "Inventory", on_inventory_tap)
-btn.attach_to(HAL.root_group)
-btn.register(touch_ui)
-# touch_ui.draw_coordinate_overlay(HAL.root_group)
-touch_ui.draw_debug_overlay(HAL.root_group)
+btn_stats = TouchButton("stats", 20, 180, 67, 50, "Stats", on_pressed, toggle=True)
+btn_stats.attach_to(HAL.root_group)
+btn_stats.register(touch_ui)
+
+# Showing the items on the screen
+HAL.display.root_group = HAL.root_group
 
 while True:
     touch_ui.poll()
     touch_ui.update()
-    time.sleep(.025)
+    # time.sleep(0.025)
+    # if HAL.tsc.touched:
+    #     point = HAL.tsc.touch
+    #     if point:
+    #         scaled = touch_ui.scale_touch(point["x"], point["y"])
+    #         TouchButton.draw_touch_marker(HAL.root_group, *scaled)
+    
