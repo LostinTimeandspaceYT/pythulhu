@@ -54,7 +54,7 @@ class PlayerCharacter:
 
         return JSONParser.get_keys(section_data)
 
-    def render_summary_lines(self) -> list[str]:
+    def render_summary_lines(self, max_lines=15) -> list[str]:
             """Returns a list of displayable summary lines for the character sheet."""
             lines = [
                 f"Name: {self.name}",
@@ -73,9 +73,13 @@ class PlayerCharacter:
                 ]
                 for stat, val in char.items():
                     if isinstance(val, dict):
-                        lines.append(f"  {stat}: {val.get('Current','-')}/{val.get('Max','-')}")
+                        lines.append(f"  {stat}: {val.get('Current','-')}/{val.get('Maximum','-')}")
                     else:
                         lines.append(f"  {stat}: {val}")
+
+            if len(lines) > max_lines:
+                return lines[:max_lines - 1] + ["(... more ...)"]
+
             return lines
 
     @property

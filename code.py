@@ -4,6 +4,8 @@ from touch_ui import TouchManager, TouchButton
 from coc_character import PulpCharacter
 from file_manager import FileManager
 from menu import Menu, PagedMenu
+from character_summary import CharacterSummaryPanel
+from skills_panel import SkillsPanel
 
 # NOTE: Order is important here!
 FileManager.mount_sdcard()
@@ -13,7 +15,6 @@ HAL.display.root_group = HAL.root_group
 
 ana_path = FileManager.get_character_path("pulp_cthulhu", "ana_engel")
 ana = PulpCharacter(ana_path)
-print(ana)
 
 # Showing the items on the screen
 menus = {}
@@ -22,6 +23,24 @@ def go_to_menu(menu_name):
     def inner_callback(button):
         menus[menu_name].show()
     return inner_callback
+
+def show_skills_menu(button):
+    HAL.clear_display()
+    gc.collect()
+    HAL.reset_display()
+    manager.buttons.clear()
+
+    global skills_panel
+    skills_panel = SkillsPanel(ana)
+    skills_panel.show(HAL)
+
+    prev_btn = TouchButton("prev", 10, 200, 80, 30, "Prev", callback=lambda b: skills_panel.prev_page())
+    next_btn = TouchButton("next", 230, 200, 80, 30, "Next", callback=lambda b: skills_panel.next_page())
+    back_btn = TouchButton("back", 110, 200, 100, 30, "Back", callback=go_to_menu("main"))
+
+    for btn in [prev_btn, next_btn, back_btn]:
+        btn.attach_to(HAL.root_group)
+        btn.register(manager)
 
 def show_character_sections_menu(button):
     HAL.clear_display()
@@ -66,8 +85,10 @@ def show_character_sheet_menu(button):
     HAL.clear_display()
     gc.collect()
     HAL.reset_display()
-    lines = ana.render_summary_lines()
-    HAL.display_multiline(lines, start_y=10, line_height=12)
+    manager.buttons.clear()
+
+    summary_panel = CharacterSummaryPanel(ana)
+    summary_panel.show(HAL)
 
     back_button = TouchButton("back", 90, 200, 140, 30, "Back", callback=go_to_menu("main"))
     back_button.attach_to(HAL.root_group)
@@ -76,7 +97,7 @@ def show_character_sheet_menu(button):
 # Define menus
 main_buttons = [
     TouchButton("summary", 50, 30, 220, 30, "Summary", callback=show_character_sheet_menu),
-    TouchButton("sections", 50, 80, 220, 30, "Sections", callback=show_character_sections_menu),
+    TouchButton("skills", 50, 80, 220, 30, "Skills", callback=show_skills_menu),
     TouchButton("quit", 50, 130, 220, 30, "Quit", callback=lambda b: print("Quit"))
 ]
 
@@ -85,6 +106,19 @@ menus["main"] = Menu("Main", main_buttons, hal=HAL, manager=manager)
 # Show initial screen
 menus["main"].show()
 
+last_encoder_position = HAL.get_encoder_position()
+
 while True:
     manager.poll()
     manager.update()
+    current_position = HAL.get_encoder_position()
+    if current_position < last_encoder_position:
+        skills_panel.move_selection_up()
+    elif current_position > last_encoder_position:
+        skills_panel.move_selection_down()
+    last_encoder_position = current_position
+
+    if HAL.is_button_pressed():
+        skills_panel.roll_selected_skill()
+        while HAL.is_button_pressed():
+            pass  # debounce (wait for release)

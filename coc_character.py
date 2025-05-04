@@ -43,26 +43,36 @@ class CthulhuCharacter(PlayerCharacter):
         else:  # to prevent empty range
             return CthulhuDice.roll_multiple([dmg_die, self.db])
 
-    def render_summary_lines(self) -> list[str]:
-            lines = [
-                f"Name: {self.name}",
-                f"Pronoun: {self.pronoun}",
-                f"Age: {self.age}",
-                f"HP: {self.current_hp}",
-                f"MP: {self.current_mp}",
-                f"Sanity: {self.current_sanity}",
-            ]
-            if hasattr(self, "current_luck"):
-                lines.append(f"Luck: {self.current_luck}")
-            lines.append("")
-            lines.append("Characteristics:")
+    def render_summary_lines(self, max_lines: int = 15) -> list[str]:
+        lines = [
+            f"Name: {self.name}",
+            f"Pronoun: {self.pronoun}" if hasattr(self, "pronoun") else "",
+            f"Age: {self.age}",
+        ]
 
-            for stat, val in self.characteristics.items():
-                if isinstance(val, dict):
-                    lines.append(f"  {stat}: {val.get('Current','-')}/{val.get('Max','-')}")
-                else:
-                    lines.append(f"  {stat}: {val}")
-            return lines
+        if hasattr(self, "current_hp"):
+            lines.append(f"HP: {self.current_hp}")
+        if hasattr(self, "current_mp"):
+            lines.append(f"MP: {self.current_mp}")
+        if hasattr(self, "current_sanity"):
+            lines.append(f"Sanity: {self.current_sanity}")
+        if hasattr(self, "current_luck"):
+            lines.append(f"Luck: {self.current_luck}")
+
+        lines += ["", "Characteristics:"]
+
+
+        for stat, val in self.characteristics.items():
+            if isinstance(val, dict):
+                lines.append(f"  {stat}: {val.get('Current', '-')}/{val.get('Maximum', '-')}")
+            else:
+                lines.append(f"  {stat}: {val}")
+
+        if len(lines) > max_lines:
+            return lines[:max_lines - 1] + ["(... more ...)"]
+
+        # Truncate if needed
+        return lines[:max_lines]
 
     def cast_spell(self, spell_name: str):
         print(f"Casting {spell_name}!")
@@ -70,6 +80,38 @@ class CthulhuCharacter(PlayerCharacter):
 
     def roll_skill(self, bonus_die: int, penalty_die: int):
         return CthulhuDice.roll_skill(bonus_die, penalty_die)
+
+    def roll_skill_by_name(self, name: str, bonus_die: int = 0, penalty_die: int = 0) -> str:
+        skills = self.skills
+        skill_val = None
+
+        for skill, value in skills.items():
+            if isinstance(value, dict):
+                # Check nested subskills (e.g., "Firearms": {"Handgun": 60})
+                if name in value:
+                    skill_val = value[name]
+                    break
+            elif skill == name:
+                skill_val = value
+                break
+
+        if skill_val is None:
+            raise ValueError(f"Skill '{name}' not found")
+
+        if isinstance(skill_val, dict):
+            skill_val = skill_val.get("Current", 0)
+
+        roll = self.roll_skill(bonus_die, penalty_die)
+
+        outcome = "Success" if roll <= skill_val else "Failure"
+        if roll <= self.get_skill_at_difficulty(skill_val, "Extreme"):
+            outcome = "Extreme Success"
+        elif roll <= self.get_skill_at_difficulty(skill_val, "Hard"):
+            outcome = "Hard Success"
+        elif roll >= self.get_fumble(skill_val):
+            outcome = "Fumble"
+
+        return f"Rolled {roll} vs {skill_val} — {outcome}"
 
     def get_skill_at_difficulty(self, skill_val: int, level: str) -> int:
         scale = {"Normal": 1, "Hard": 0.5, "Extreme": 0.2}
@@ -107,7 +149,7 @@ class CthulhuCharacter(PlayerCharacter):
 
     @property
     def skills(self):
-        return self.get_keys(self.sheet["Skills"])
+        return self.sheet["Skills"]
 
     @property
     def db(self):
