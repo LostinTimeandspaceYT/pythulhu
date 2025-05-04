@@ -173,3 +173,14 @@ class TouchManager:
                     return
         else:
             self._touch_active = False
+
+
+"""DEBUG EXAMPLES:
+
+    time.sleep(0.025)
+    if HAL.tsc.touched:
+        point = HAL.tsc.touch
+        if point:
+            scaled = touch_ui.scale_touch(point["x"], point["y"])
+            TouchButton.draw_touch_marker(HAL.root_group, *scaled)
+"""
