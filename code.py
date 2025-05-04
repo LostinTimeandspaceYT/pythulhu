@@ -1,5 +1,3 @@
-import gc
-import time
 from hardware import HAL
 from touch_ui import TouchManager, TouchButton
 from coc_character import PulpCharacter
@@ -13,7 +11,12 @@ from calibrator import Calibrator
 
 HAL.init()
 touch_ui = TouchManager(HAL.tsc)
-touch_ui.draw_coordinate_overlay(HAL.root_group)
+
+CALIBRATE = False
+if CALIBRATE:
+    cal = Calibrator(HAL.tsc)
+    cal.calibrate(display=HAL.display)
+    touch_ui.draw_coordinate_overlay(HAL.root_group)
 
 # Callback
 def on_pressed(btn):
@@ -41,4 +44,3 @@ while True:
     #     if point:
     #         scaled = touch_ui.scale_touch(point["x"], point["y"])
     #         TouchButton.draw_touch_marker(HAL.root_group, *scaled)
-    
