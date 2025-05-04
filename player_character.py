@@ -42,6 +42,18 @@ class PlayerCharacter:
         """
         return JSONParser.get_keys(d)
 
+    def get_sections(self) -> list[str]:
+            """Returns a list of top-level dictionary keys in the character sheet."""
+            return [k for k, v in self._sheet.items() if isinstance(v, dict)]
+
+    def get_section_lines(self, section: str) -> list[str]:
+        """Returns a formatted list of lines for a given section name."""
+        section_data = self._sheet.get(section)
+        if not isinstance(section_data, dict):
+            return [f"{section}: {section_data}"]
+
+        return JSONParser.get_keys(section_data)
+
     def render_summary_lines(self) -> list[str]:
             """Returns a list of displayable summary lines for the character sheet."""
             lines = [

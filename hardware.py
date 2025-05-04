@@ -111,11 +111,18 @@ class HAL:
         cls.display.root_group[group_index][0].text = text
 
     @classmethod
-    def display_multiline(cls, lines: list[str], start_y=0, line_height=20):
+    def display_multiline(cls, lines: list[str], start_y=0, line_height=16, x_offset=0):
         cls.clear_display()
         for i, line in enumerate(lines):
-            txt = label.Label(terminalio.FONT, text=line, color=0xFFFFFF, x=0, y=start_y + i * line_height)
+            txt = label.Label(
+                terminalio.FONT,
+                text=line,
+                color=0xFFFFFF,
+                x=x_offset,
+                y=start_y + i * line_height
+            )
             cls.display.root_group.append(txt)
+
 
     @classmethod
     def display_image(cls, img_name: str) -> None:
