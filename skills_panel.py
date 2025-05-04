@@ -1,10 +1,22 @@
 import displayio
 from text_viewport import TextViewport
-from random import randint
 
 class SkillsPanel:
-    def __init__(self, character, x=10, y=10, width=300, height=160, lines_per_column=7):
-        self.character = character
+    def __init__(
+        self,
+        context,
+        x: int = 10,
+        y: int = 10,
+        width: int = 300,
+        height: int = 160,
+        lines_per_column: int = 7,
+    ):
+
+        self.context = context
+        self.character = context.character
+        self.hal = context.hal
+        self.manager = context.manager
+        self.nav_buttons = context.nav_buttons
         self.group = displayio.Group()
         self.lines_per_column = lines_per_column
         self.total_lines_per_page = lines_per_column * 2
@@ -103,27 +115,44 @@ class SkillsPanel:
 
     def roll_selected_skill(self):
         line = self.all_lines[self.selected_index].strip()
-
-        # Remove arrow or spacing
         line = line.lstrip(">").strip()
+
         if ":" in line:
             skill_name = line.split(":", 1)[0].strip()
-            try:
-                result = self.character.roll_skill_by_name(skill_name)
-                print(result)  # You can later show this on-screen
-            except Exception as e:
-                print(f"Skill roll failed: {e}")
+            self.open_skill_roll_panel(skill_name)
 
-    def show(self, hal):
+    def open_skill_roll_panel(self, skill_name: str):
+        from skill_roll_panel import SkillRollPanel  # import here to avoid circular issues
+
+
+        def close_panel(_result=None):
+            self.roll_panel.detach_from(self.hal.root_group, self.manager)
+            self.show()
+
+        self.roll_panel = SkillRollPanel(
+            context = self.context,
+            skill_name=skill_name,
+            confirm_callback=close_panel,
+            cancel_callback=close_panel
+        )
+
+        # Clear current screen
+        self.hal.clear_display()
+        self.hal.reset_display()
+        self.manager.buttons.clear()
+
+        self.roll_panel.attach_to(self.hal.root_group, self.manager)
+
+    def show(self):
         self.update()
-        hal.root_group.append(self.group)
+        self.hal.root_group.append(self.group)
 
     def clear(self):
         self.viewport.set_lines([])
 
-    def hide(self, hal):
-        if self.group in hal.root_group:
-            hal.root_group.remove(self.group)
+    def hide(self):
+        if self.group in self.hal.root_group:
+            self.hal.root_group.remove(self.group)
 
     def next_page(self):
         if self.page < self.total_pages - 1:

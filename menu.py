@@ -24,8 +24,10 @@ class Menu:
         self.hal.clear_display()
         gc.collect()
         self.hal.display.root_group = self.group
+        self.manager.buttons.clear()  # ← Add this
         for button in self.buttons:
             button.register(self.manager)
+
 
 
 class PagedMenu:

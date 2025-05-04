@@ -1,9 +1,59 @@
 import time
 import terminalio
+import displayio
 from adafruit_button import Button
-from adafruit_display_text import label
+from adafruit_display_text.label import Label
 from adafruit_display_shapes.rect import Rect
 from adafruit_display_shapes.line import Line
+
+
+class LightTouchButton:
+    def __init__(self, name, x, y, width, height, text, callback=None):
+        self.name = name
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.callback = callback
+
+        self.label = Label(
+            terminalio.FONT,
+            text=text,
+            color=0xFFFFFF,
+            x=x + 4,
+            y=y + 4,
+        )
+
+        self.group = displayio.Group()
+        self.group.append(self.label)
+
+    def attach_to(self, root_group):
+        root_group.append(self.group)
+
+    def remove_from(self, root_group):
+        if self.group in root_group:
+            root_group.remove(self.group)
+
+    def register(self, manager):
+        manager.register(self)
+
+    def unregister(self, manager):
+        manager.unregister(self)
+
+    def update(self):
+        # TODO: implement later
+        pass
+
+    def contains(self, point):
+        if not point:
+            return False
+        px, py = point
+        return (self.x <= px <= self.x + self.width and
+                self.y <= py <= self.y + self.height)
+
+    def press(self):
+        if self.callback:
+            self.callback(self)
 
 
 class TouchButton:
@@ -29,7 +79,7 @@ class TouchButton:
             outline_color=0xAAAAAA,
             selected_fill=0x3333FF,
             selected_outline=0xFFFFFF,
-            style=Button.ROUNDRECT
+            style=Button.RECT
         )
 
         self._original_fill = self.button.fill_color
@@ -58,6 +108,13 @@ class TouchButton:
 
     def register(self, manager):
         manager.add_button(self)
+
+    def unregister(self, manager):
+        manager.unregister(self)
+
+    def remove_from(self, group):
+        if self.button in group:
+            group.remove(self.button)
 
     def contains(self, point):
         if not point:
@@ -94,7 +151,7 @@ class TouchButton:
 class TouchManager:
     def __init__(self, tsc_device, width=320, height=240):
         self.tsc = tsc_device
-        self.buttons: list[TouchButton] = []
+        self.buttons = []
         self._touch_active = False
         self.screen_width = width
         self.screen_height = height
@@ -108,6 +165,14 @@ class TouchManager:
         self.raw_max_x = 3700
         self.raw_min_y = 250
         self.raw_max_y = 3600
+
+    def register(self, btn):
+        if btn not in self.buttons:
+            self.buttons.append(btn)
+
+    def unregister(self, btn):
+        if btn in self.buttons:
+            self.buttons.remove(btn)
 
     def scale_touch(self, raw_x, raw_y):
         if self.swap_xy:
@@ -126,7 +191,7 @@ class TouchManager:
         return (screen_x, screen_y)
 
     def draw_coordinate_overlay(self, group):
-        self.coord_label = label.Label(terminalio.FONT, text="", color=0xFF00FF, x=5, y=5)
+        self.coord_label = Label(terminalio.FONT, text="", color=0xFF00FF, x=5, y=5)
         group.append(self.coord_label)
 
     def update_coordinates(self, raw, scaled):
@@ -139,6 +204,14 @@ class TouchManager:
         for button in self.buttons:
             button.update()
 
+    def register_persistent(self, button):
+        if button not in self.buttons:
+            self.buttons.append(button)
+        self.persistent_buttons.append(button)
+
+    def clear_non_persistent(self):
+        self.buttons = list(self.persistent_buttons)
+
     def clear_group_selection(self, group_name: str):
         for button in self.buttons:
             if button.group == group_name:
@@ -146,6 +219,10 @@ class TouchManager:
 
     def add_button(self, button: TouchButton):
         self.buttons.append(button)
+
+    def unregister(self, btn):
+        if btn in self.buttons:
+            self.buttons.remove(btn)
 
     def poll(self):
         if self.tsc.touched:
@@ -162,15 +239,17 @@ class TouchManager:
             self.update_coordinates(raw_pos, screen_pos)
 
             for button in self.buttons:
-                if button.button.contains(screen_pos):
-                    if button.toggleable:
-                        if button.group:
+                if button.contains(screen_pos):
+                    if hasattr(button, "toggleable") and button.toggleable:
+                        if getattr(button, "group", None):
                             self.clear_group_selection(button.group)
                         button.set_toggled(not button.is_toggled())
-                    button.flash()
+                    if hasattr(button, "flash"):
+                        button.flash()
                     if button.callback:
                         button.callback(button)
                     return
+
         else:
             self._touch_active = False
 
