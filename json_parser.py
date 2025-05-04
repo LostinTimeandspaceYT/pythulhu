@@ -76,7 +76,7 @@ class JSONParser:
                 value = cls.get_value_at_key(v, key)
                 if value is not None:
                     return value
-    
+
     @classmethod
     def flatten_keys(cls, d: dict, parent_key="", sep=" -> ", out=None):
         if out is None:

@@ -42,6 +42,30 @@ class PlayerCharacter:
         """
         return JSONParser.get_keys(d)
 
+    def render_summary_lines(self) -> list[str]:
+            """Returns a list of displayable summary lines for the character sheet."""
+            lines = [
+                f"Name: {self.name}",
+                f"Age: {self.age}",
+            ]
+
+            pronoun = self._sheet.get("Pronoun")
+            if pronoun:
+                lines.append(f"Pronoun: {pronoun}")
+
+            if "Characteristics" in self._sheet:
+                char = self._sheet["Characteristics"]
+                lines += [
+                    "",
+                    "Characteristics:"
+                ]
+                for stat, val in char.items():
+                    if isinstance(val, dict):
+                        lines.append(f"  {stat}: {val.get('Current','-')}/{val.get('Max','-')}")
+                    else:
+                        lines.append(f"  {stat}: {val}")
+            return lines
+
     @property
     def sheet(self):
         return self._sheet

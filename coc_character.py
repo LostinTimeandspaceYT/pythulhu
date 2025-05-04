@@ -14,15 +14,14 @@ class CthulhuCharacter(PlayerCharacter):
         self.current_weapon: dict = {}
         self.skills_to_improve: list[str] = []  # Used during Development phase
 
+    def __str__(self):
+        return f"{self.name} ({self.pronoun}) — HP: {self.current_hp}, SAN: {self.current_sanity}, MP: {self.current_mp}"
+
     def str_plus_siz(self) -> int:
         return (
             self.characteristics["STR"]
             + self.characteristics["SIZ"]
         )
-
-    def __str__(self):
-        return f"{self.name} ({self.pronoun}) — HP: {self.current_hp}, SAN: {self.current_sanity}, MP: {self.current_mp}"
-
 
     def damage_bonus(self) -> tuple:
         """Returns a tuple (num_dice, num_side) such that -2 and -1 are const"""
@@ -43,6 +42,27 @@ class CthulhuCharacter(PlayerCharacter):
             return CthulhuDice.roll(*dmg_die)
         else:  # to prevent empty range
             return CthulhuDice.roll_multiple([dmg_die, self.db])
+
+    def render_summary_lines(self) -> list[str]:
+            lines = [
+                f"Name: {self.name}",
+                f"Pronoun: {self.pronoun}",
+                f"Age: {self.age}",
+                f"HP: {self.current_hp}",
+                f"MP: {self.current_mp}",
+                f"Sanity: {self.current_sanity}",
+            ]
+            if hasattr(self, "current_luck"):
+                lines.append(f"Luck: {self.current_luck}")
+            lines.append("")
+            lines.append("Characteristics:")
+
+            for stat, val in self.characteristics.items():
+                if isinstance(val, dict):
+                    lines.append(f"  {stat}: {val.get('Current','-')}/{val.get('Max','-')}")
+                else:
+                    lines.append(f"  {stat}: {val}")
+            return lines
 
     def cast_spell(self, spell_name: str):
         print(f"Casting {spell_name}!")
