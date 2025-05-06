@@ -1,0 +1,44 @@
+import displayio
+
+class BasePanel:
+    def __init__(self, context):
+        self.context = context
+        self.hal = context.hal
+        self.manager = context.manager
+        self.character = context.character
+        self.group = displayio.Group()
+        self.mode = "select"  # or "edit"
+        self.awaiting_release = False
+
+    def show(self):
+        self.hal.clear_display()
+        self.hal.reset_display()
+        self.hal.root_group.append(self.group)
+
+    def hide(self):
+        if self.group in self.hal.root_group:
+            self.hal.root_group.remove(self.group)
+
+    def attach_to(self):
+        self.hal.root_group.append(self.group)
+
+    def detach_from(self):
+        if self.group in self.hal.root_group:
+            self.hal.root_group.remove(self.group)
+
+    def toggle_mode(self):
+        self.mode = "edit" if self.mode == "select" else "select"
+
+    def on_mode_change(self):
+        """Override in child classes"""
+        pass
+
+    def update(self):
+        if self.hal.is_button_pressed():
+            if not self.awaiting_release:
+                self.toggle_mode()
+                self.on_mode_change()
+                self.awaiting_release = True
+        else:
+            self.awaiting_release = False
+

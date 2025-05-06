@@ -1,79 +1,106 @@
 import displayio
 from adafruit_display_text.label import Label
 import terminalio
-from touch_ui import TouchButton, LightTouchButton
+from base_panel import BasePanel
 
-class SkillRollPanel:
-    def __init__(self, character, skill_name, confirm_callback, cancel_callback):
-        self.character = character
-        self.skill_name = skill_name
+
+class SkillRollPanel(BasePanel):
+    def __init__(self, context, skill_name, confirm_callback, cancel_callback):
+        super().__init__(context)
+        self.character = context.character
         self.confirm_callback = confirm_callback
         self.cancel_callback = cancel_callback
 
-        self.group = displayio.Group()
-        self.bonus_dice = 0
-        self.penalty_dice = 0
-        self.difficulty_levels = ["Normal", "Hard", "Extreme"]
-        self.difficulty_index = 0
+        skill_val = self.character.get_value_at(skill_name)
+        if isinstance(skill_val, dict):
+            skill_val = skill_val.get("Current", 0)
 
-        # Title label
-        self.title = Label(terminalio.FONT, text=f"Roll: {skill_name}", color=0xFFFFFF, x=10, y=10)
-        self.group.append(self.title)
+        self.skill_name = skill_name
+        self.skill_val = skill_val
 
-        # Bonus/Penalty Controls
-        self.bonus_label = Label(terminalio.FONT, text="Bonus Dice: 0", color=0xFFFFFF, x=10, y=40)
-        self.group.append(self.bonus_label)
+        self.roll_params = {
+            "Difficulty": "Normal",
+            "Bonus": 0,
+            "Penalty": 0
+        }
 
-        self.bonus_minus = LightTouchButton("bonus_minus", 180, 34, 20, 20, "-", callback=self.decrease_bonus)
-        self.bonus_plus = LightTouchButton("bonus_plus", 210, 34, 20, 20, "+", callback=self.increase_bonus)
+        self.param_keys = list(self.roll_params.keys())
+        self.selected_index = 0
+        self.last_encoder_position = self.hal.get_encoder_position()
 
-        # Difficulty
-        self.difficulty_label = Label(terminalio.FONT, text="Difficulty: Normal", color=0xFFFFFF, x=10, y=70)
-        self.group.append(self.difficulty_label)
+        self.labels = []
+        self._init_labels()
 
-        # Result display
-        self.result_label = Label(terminalio.FONT, text="", color=0xFFFF00, x=10, y=110)
+        self.result_label = Label(terminalio.FONT, text="", color=0xFFFF00, x=10, y=130)
         self.group.append(self.result_label)
 
-        # Action buttons
-        self.roll_btn = TouchButton("roll", 180, 180, 100, 30, "Roll", callback=confirm_callback)
+    def _init_labels(self):
+        """Initialize Label objects once and reuse them."""
+        y = 10
+        for i in range(len(self.param_keys)):
+            label = Label(terminalio.FONT, text="", color=0xFFFFFF, x=10, y=y)
+            self.labels.append(label)
+            self.group.append(label)
+            y += 20
+        self.render_labels()
 
-    def attach_to(self, root_group, manager):
-        root_group.append(self.group)
-        for btn in [self.bonus_minus, self.bonus_plus, self.roll_btn]:
-            btn.attach_to(root_group)
-            btn.register(manager)
+    def render_labels(self):
+        """Update text for each label instead of reallocating them."""
+        y = 10
+        for i, key in enumerate(self.param_keys):
+            prefix = "> " if i == self.selected_index else "  "
+            self.labels[i].text = f"{prefix}{key}: {self.roll_params[key]}"
+            self.labels[i].y = y
+            y += 20
 
-    def detach_from(self, root_group, manager):
-        if self.group in root_group:
-            root_group.remove(self.group)
-        for btn in [self.bonus_minus, self.bonus_plus, self.cancel_btn, self.roll_btn]:
-            btn.remove_from(root_group)
-            btn.unregister(manager)
+    def on_mode_change(self):
+        self.render_labels()
 
-    def increase_bonus(self, button):
-        self.bonus_dice += 1
-        self.update_bonus_label()
+    def move_selection_up(self):
+        if self.selected_index > 0:
+            self.selected_index -= 1
+            self.render_labels()
 
-    def decrease_bonus(self, button):
-        if self.bonus_dice > 0:
-            self.bonus_dice -= 1
-        self.update_bonus_label()
+    def move_selection_down(self):
+        if self.selected_index < len(self.param_keys) - 1:
+            self.selected_index += 1
+            self.render_labels()
 
-    def update_bonus_label(self):
-        self.bonus_label.text = f"Bonus Dice: {self.bonus_dice}"
+    def modify_selected_param(self, increment=True):
+        key = self.param_keys[self.selected_index]
+        if key == "Difficulty":
+            levels = ["Normal", "Hard", "Extreme"]
+            current = self.roll_params[key]
+            idx = levels.index(current)
+            idx = (idx + 1) % len(levels) if increment else (idx - 1) % len(levels)
+            self.roll_params[key] = levels[idx]
 
-    def update_difficulty(self):
-        self.difficulty_index = (self.difficulty_index + 1) % len(self.difficulty_levels)
-        self.difficulty_label.text = f"Difficulty: {self.difficulty_levels[self.difficulty_index]}"
+        elif key in ("Bonus", "Penalty"):
+            delta = 1 if increment else -1
+            self.roll_params[key] = max(0, min(3, self.roll_params[key] + delta))
 
-    def roll(self, button):
-        difficulty = self.difficulty_levels[self.difficulty_index]
+        self.render_labels()
+
+    def roll(self):
         result = self.character.roll_skill_by_name(
             self.skill_name,
-            bonus_die=self.bonus_dice,
-            penalty_die=0  # Add penalty logic if needed
+            bonus_die=self.roll_params["Bonus"],
+            penalty_die=self.roll_params["Penalty"]
         )
         self.result_label.text = result
         if self.confirm_callback:
             self.confirm_callback(result)
+
+    def update(self):
+        super().update()  # handles button press and mode toggle
+
+        current_position = self.hal.get_encoder_position()
+        if current_position != self.last_encoder_position:
+            if self.mode == "select":
+                if current_position > self.last_encoder_position:
+                    self.move_selection_down()
+                else:
+                    self.move_selection_up()
+            elif self.mode == "edit":
+                self.modify_selected_param(increment=(current_position > self.last_encoder_position))
+            self.last_encoder_position = current_position
