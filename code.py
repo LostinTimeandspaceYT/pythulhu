@@ -1,13 +1,12 @@
 import gc
 from hardware import HAL
-from touch_ui import TouchManager, TouchButton
+from touch_ui import TouchManager, TouchButton, LightTouchButton
 from coc_character import PulpCharacter
 from file_manager import FileManager
 from menu import Menu, PagedMenu
 from character_summary import CharacterSummaryPanel
 from skills_panel import SkillsPanel
 from ui_context import UIContext
-
 
 # NOTE: Order is important here!
 FileManager.mount_sdcard()
@@ -19,9 +18,9 @@ ana_path = FileManager.get_character_path("pulp_cthulhu", "ana_engel")
 ana = PulpCharacter(ana_path)
 
 nav_buttons = {
-    "prev": TouchButton("prev", 10, 200, 80, 30, "Prev"),
-    "next": TouchButton("next", 230, 200, 80, 30, "Next"),
-    "back": TouchButton("back", 110, 200, 100, 30, "Back"),
+    "prev": LightTouchButton("prev", 10, 200, 80, 30, "Prev"),
+    "next": LightTouchButton("next", 230, 200, 80, 30, "Next"),
+    "back": LightTouchButton("back", 110, 200, 100, 30, "Back"),
 }
 
 # Showing the items on the screen
@@ -43,33 +42,29 @@ def activate_nav_buttons(*names):
             btn.remove_from(HAL.root_group)
             btn.unregister(manager)
 
-
 def go_to_menu(menu_name):
     def inner_callback(button):
         menus[menu_name].show()
     return inner_callback
 
 def show_skills_menu(button):
+
     HAL.clear_display()
     gc.collect()
     HAL.reset_display()
     manager.buttons.clear()
 
-    global skills_panel
-    skills_panel = SkillsPanel(context)
-    skills_panel.show()
+    panel = SkillsPanel(context)
+    panel.show()
+    context.active_panel = panel
 
-    # Update callbacks before activating
-    nav_buttons["prev"].callback = lambda b: skills_panel.prev_page()
-    nav_buttons["next"].callback = lambda b: skills_panel.next_page()
+    nav_buttons["prev"].callback = lambda b: panel.prev_page()
+    nav_buttons["next"].callback = lambda b: panel.next_page()
     nav_buttons["back"].callback = go_to_menu("main")
     activate_nav_buttons("prev", "next", "back")
 
 def show_character_sections_menu(button):
-    HAL.clear_display()
-    gc.collect()
-    HAL.reset_display()
-    manager.buttons.clear()
+    context.reset()
 
     section_names = ana.get_sections()
     buttons = []
@@ -93,10 +88,9 @@ def show_character_sections_menu(button):
 
 def show_section_detail(section):
     def handler(button):
-        lines = ana.get_section_lines(section)
         paged_menu = PagedMenu(
             name=section,
-            lines=lines,
+            lines=ana.get_section_lines(section),
             hal=HAL,
             manager=manager,
             on_back=show_character_sections_menu
@@ -105,13 +99,12 @@ def show_section_detail(section):
     return handler
 
 def show_character_sheet_menu(button):
-    HAL.clear_display()
-    gc.collect()
-    HAL.reset_display()
-    manager.buttons.clear()
+
+    context.reset()
 
     summary_panel = CharacterSummaryPanel(ana)
     summary_panel.show(HAL)
+    context.active_panel = summary_panel
 
     back_button = TouchButton("back", 90, 200, 140, 30, "Back", callback=go_to_menu("main"))
     back_button.attach_to(HAL.root_group)
@@ -128,19 +121,9 @@ menus["main"] = Menu("Main", main_buttons, hal=HAL, manager=manager)
 # Show initial screen
 menus["main"].show()
 
-last_encoder_position = HAL.get_encoder_position()
-
 while True:
     manager.poll()
     manager.update()
-    current_position = HAL.get_encoder_position()
-    if current_position < last_encoder_position:
-        skills_panel.move_selection_up()
-    elif current_position > last_encoder_position:
-        skills_panel.move_selection_down()
-    last_encoder_position = current_position
 
-    if HAL.is_button_pressed():
-        skills_panel.roll_selected_skill()
-        while HAL.is_button_pressed():
-            pass  # debounce (wait for release)
+    if context.active_panel and hasattr(context.active_panel, "update"):
+        context.active_panel.update()
