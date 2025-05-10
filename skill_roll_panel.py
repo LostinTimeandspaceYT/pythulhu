@@ -1,22 +1,10 @@
 from adafruit_display_text.label import Label
 import terminalio
 from base_panel import BasePanel
+from coc_evaluator import evaluate_roll, DIFFICULTY_LEVELS
 
 
 class SkillRollPanel(BasePanel):
-    DIFFICULTY_LEVELS = {
-        "Normal": 1,
-        "Hard": 2,
-        "Extreme": 3
-    }
-    SUCCESS_LEVELS = {
-        "Fumble": 0,
-        "Fail": 0,
-        "Normal": 1,
-        "Hard": 2,
-        "Extreme": 3,
-        "Critical": 4
-    }
     def __init__(self, context, skill_name, confirm_callback, cancel_callback):
         super().__init__(context)
         self.character = context.character
@@ -101,7 +89,7 @@ class SkillRollPanel(BasePanel):
             self.roll_params["Confirm"] = not self.roll_params["Confirm"]
 
         if key == "Difficulty":
-            levels = list(self.DIFFICULTY_LEVELS.keys())
+            levels = list(DIFFICULTY_LEVELS.keys())
             idx = levels.index(self.roll_params[key])
             idx = (idx + 1) % len(levels) if increment else (idx - 1) % len(levels)
             self.roll_params[key] = levels[idx]
@@ -113,39 +101,20 @@ class SkillRollPanel(BasePanel):
         self.render_labels()
 
     def roll(self):
-        result = self.character.roll_skill(
+        roll = self.character.roll_skill(
             bonus_die=self.roll_params["Bonus"],
             penalty_die=self.roll_params["Penalty"]
         )
-        self.set_result_text(result)
+        result = evaluate_roll(
+            roll,
+            self.skill_val,
+            bonus=self.roll_params["Bonus"],
+            penalty=self.roll_params["Penalty"]
+        )
 
-    def set_result_text(self, roll: int):
-        thresholds = self.character.get_skill_thresholds(self.skill_val)
-        if roll >= 96 and self.skill_val < 50 or roll == 100:
-            actual = "Fumble"
-        elif roll <= thresholds["Extreme"]:
-            actual = "Extreme"
-        elif roll <= thresholds["Hard"]:
-            actual = "Hard"
-        elif roll <= thresholds["Normal"]:
-            actual = "Normal"
-        elif roll == 1 and self.roll_params["Bonus"] == 0 and self.roll_params["Penalty"] == 0:
-            actual = "Critical"
-        else:
-            actual = "Fail"
+        self.result_label.color = result.stylize(DIFFICULTY_LEVELS[self.roll_params["Difficulty"]])
+        self.result_label.text = result.summary()
 
-        level = self.SUCCESS_LEVELS.get(actual, 0)
-        required_level = self.DIFFICULTY_LEVELS.get(self.roll_params["Difficulty"], 1)
-        if level >= required_level:
-            self.result_label.color = (
-                0x00FFFF if level == self.SUCCESS_LEVELS["Critical"] else 0x00FF00
-            )
-            outcome = f"{actual} Success" 
-        else:
-            self.result_label.color = 0xFF0000
-            outcome = actual if actual == "Fumble" else "Fail"
-
-        self.result_label.text = f"{roll} vs {self.skill_val}: {outcome}"
 
     def update(self):
         super().update()  # handles button press + mode toggle
