@@ -145,7 +145,7 @@ class SkillsPanel(BasePanel):
         self.roll_panel = SkillRollPanel(
             context=self.context,
             skill_name=skill_name,
-            confirm_callback=close_panel,
+            confirm_callback=None,
             cancel_callback=close_panel
         )
 
