@@ -6,8 +6,15 @@ __author__ = "Nathan Winslow"
 __copyright__ = "MIT"
 
 from random import seed, randint
+import analogio
+import board
 
-seed(0)
+# A0 should be unconnected
+noise_pin = analogio.AnalogIn(board.A0)
+entropy = 0
+for _ in range(8):
+    entropy ^= noise_pin.value
+seed(entropy)
 
 
 class Dice:
