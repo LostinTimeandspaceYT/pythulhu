@@ -38,4 +38,4 @@ def evaluate_roll(roll: int, skill_val: int, *, bonus=0, penalty=0) -> RollResul
     level_key = outcome.split()[0]  # e.g. "Hard", "Fail"
     level = SUCCESS_LEVELS.get(level_key, 0)
 
-    return RollResult(roll, skill_val, outcome, level)
+    return RollResult(roll, outcome, level)

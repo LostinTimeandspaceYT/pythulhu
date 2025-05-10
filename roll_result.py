@@ -1,16 +1,24 @@
 
 class RollResult:
-    def __init__(self, roll: int, skill_val: int, outcome: str, level: int):
+    def __init__(self, roll: int, outcome: str, level: int):
+        """
+
+        Args:
+            roll (int): What the actual roll was
+            outcome (str): description to display on screen
+            level (int): 0 = fail, 1 = pass, but can be extended if needed.
+        """
         self.roll = roll
-        self.skill_val = skill_val
         self.outcome = outcome
-        self.level = level
+        self.success_level = level
+
+    def __str__(self):
+        return self.summary()
 
     def passed(self, difficulty: int = 1) -> bool:
-        return self.level >= difficulty
+        return self.success_level  >= difficulty
 
-
-    def stylize(self, difficulty: str = "Normal") -> int:
+    def stylize(self, difficulty: int) -> int:
         if self.outcome.startswith("Critical"):
             return 0x00FFFF  # cyan
         elif self.passed(difficulty):
@@ -19,4 +27,4 @@ class RollResult:
             return 0xFF0000  # red
 
     def summary(self) -> str:
-        return f"{self.roll} vs {self.skill_val}: {self.outcome}"
+        return f"Rolled {self.roll}: {self.outcome}"
