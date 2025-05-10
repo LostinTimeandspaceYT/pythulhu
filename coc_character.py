@@ -81,44 +81,12 @@ class CthulhuCharacter(PlayerCharacter):
     def roll_skill(self, bonus_die: int, penalty_die: int):
         return CthulhuDice.roll_skill(bonus_die, penalty_die)
 
-    def roll_skill_by_name(self, name: str, bonus_die: int = 0, penalty_die: int = 0) -> str:
-        skills = self.skills
-        skill_val = None
-
-        for skill, value in skills.items():
-            if isinstance(value, dict):
-                # Check nested subskills (e.g., "Firearms": {"Handgun": 60})
-                if name in value:
-                    skill_val = value[name]
-                    break
-            elif skill == name:
-                skill_val = value
-                break
-
-        if skill_val is None:
-            raise ValueError(f"Skill '{name}' not found")
-
-        if isinstance(skill_val, dict):
-            skill_val = skill_val.get("Current", 0)
-
-        roll = self.roll_skill(bonus_die, penalty_die)
-
-        outcome = "Success" if roll <= skill_val else "Failure"
-        if roll <= self.get_skill_at_difficulty(skill_val, "Extreme"):
-            outcome = "Extreme Success"
-        elif roll <= self.get_skill_at_difficulty(skill_val, "Hard"):
-            outcome = "Hard Success"
-        elif roll >= self.get_fumble(skill_val):
-            outcome = "Fumble"
-
-        return f"Rolled {roll} vs {skill_val} — {outcome}"
-
-    def get_skill_at_difficulty(self, skill_val: int, level: str) -> int:
-        scale = {"Normal": 1, "Hard": 0.5, "Extreme": 0.2}
-        return int(skill_val * scale.get(level, 1))
-
-    def get_fumble(self, skill_val):
-        return 100 if skill_val >= 50 else 96
+    def get_skill_thresholds(self, skill_val: int) -> dict:
+        return {
+            "Normal": int(skill_val),
+            "Hard": int(0.5 * skill_val),
+            "Extreme": int(0.2 * skill_val)
+        }
 
     def change_hit_points(self, amount: int):
         self.sheet[CHAR][HP]["Current"] += amount
