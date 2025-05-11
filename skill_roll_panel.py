@@ -24,6 +24,7 @@ class SkillRollPanel(BasePanel):
             "Penalty": 0,
             "Confirm": False
         }
+        self.result = None
 
         # Explicit display order
         self.param_keys = [
@@ -100,22 +101,57 @@ class SkillRollPanel(BasePanel):
 
         self.render_labels()
 
-    def roll(self):
-        roll = self.character.roll_skill(
-            bonus_die=self.roll_params["Bonus"],
-            penalty_die=self.roll_params["Penalty"]
-        )
-        result = CthulhuGame.evaluate_skill_roll(
-            roll,
-            self.skill_val,
-            bonus=self.roll_params["Bonus"],
-            penalty=self.roll_params["Penalty"]
-        )
+    def reset(self, skill_name: str):
+        self.skill_name = skill_name
+        self.skill_val = self.character.get_value_at(skill_name)
+        if isinstance(self.skill_val, dict):
+            self.skill_val = self.skill_val.get("Current", 0)
 
-        self.result_label.color = result.stylize(
+        self.roll_params = {
+            "Difficulty": "Normal",
+            "Bonus": 0,
+            "Penalty": 0,
+            "Confirm": False
+        }
+        self.result = None
+        self.result_label.text = ""
+        self.render_labels()
+
+    def roll(self):
+        bonus = self.roll_params["Bonus"]
+        penalty = self.roll_params["Penalty"]
+
+        if self.result is None: # Their first attempt
+            roll = self.character.roll_skill(
+                bonus_die=bonus,
+                penalty_die=penalty
+            )
+            self.result = CthulhuGame.evaluate_skill_roll(
+                roll,
+                self.skill_val,
+                bonus=bonus,
+                penalty=penalty
+            )
+        else:
+            if self.result.success_level != 0:
+                return # account for fumble or success
+
+            push = self.character.roll_skill(
+                bonus_die=bonus,
+                penalty_die=penalty
+            )
+            self.result = CthulhuGame.evaluate_skill_roll(
+                push,
+                self.skill_val,
+                bonus=bonus,
+                penalty=penalty
+            )
+            self.result.outcome += " (Pushed)"
+
+        self.result_label.color = self.result.stylize(
             CthulhuGame.DIFFICULTY_LEVELS[self.roll_params["Difficulty"]]
         )
-        self.result_label.text = result.summary()
+        self.result_label.text = self.result.summary()
 
 
     def update(self):

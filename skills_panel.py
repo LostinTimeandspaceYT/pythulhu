@@ -45,6 +45,10 @@ class SkillsPanel(BasePanel):
         self.all_lines = self.get_all_skill_lines()
         self.total_pages = (len(self.all_lines) + self.total_lines_per_page - 1) // self.total_lines_per_page
 
+    def attach_to(self):
+        super().attach_to()
+        self.update_page()
+
     def get_all_skill_lines(self) -> list[str]:
         sheet = self.character.sheet
         skills = sheet.get("Skills", {})
@@ -139,20 +143,17 @@ class SkillsPanel(BasePanel):
         from skill_roll_panel import SkillRollPanel
 
         def close_panel(_result=None):
-            self.roll_panel.detach_from()
-            self.show()
+            self.context.transition_back()
 
-        self.roll_panel = SkillRollPanel(
-            context=self.context,
-            skill_name=skill_name,
-            confirm_callback=None,
-            cancel_callback=close_panel
-        )
-
-        self.hal.clear_display()
-        self.hal.reset_display()
-        self.manager.buttons.clear()
-        self.context.active_panel.detach_from()  # detach previous panel
-        self.context.active_panel = self.roll_panel
-
-        self.roll_panel.attach_to()
+        roll_panel = self.context.get_panel("roll")
+        if roll_panel:
+            roll_panel.reset(skill_name=skill_name)
+        else:
+            roll_panel = SkillRollPanel(
+                context=self.context,
+                skill_name=skill_name,
+                confirm_callback=None,
+                cancel_callback=close_panel
+            )
+            self.context.register_panel("roll", roll_panel)
+        self.context.transition_to("roll")
