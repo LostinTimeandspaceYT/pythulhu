@@ -81,13 +81,6 @@ class CthulhuCharacter(PlayerCharacter):
     def roll_skill(self, bonus_die: int, penalty_die: int):
         return CthulhuDice.roll_skill(bonus_die, penalty_die)
 
-    def get_skill_thresholds(self, skill_val: int) -> dict:
-        return {
-            "Normal": int(skill_val),
-            "Hard": int(0.5 * skill_val),
-            "Extreme": int(0.2 * skill_val)
-        }
-
     def change_hit_points(self, amount: int):
         self.sheet[CHAR][HP]["Current"] += amount
 
