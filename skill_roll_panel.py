@@ -1,7 +1,7 @@
 from adafruit_display_text.label import Label
 import terminalio
 from base_panel import BasePanel
-from coc_evaluator import evaluate_roll, DIFFICULTY_LEVELS
+from coc_game import CthulhuGame
 
 
 class SkillRollPanel(BasePanel):
@@ -89,7 +89,7 @@ class SkillRollPanel(BasePanel):
             self.roll_params["Confirm"] = not self.roll_params["Confirm"]
 
         if key == "Difficulty":
-            levels = list(DIFFICULTY_LEVELS.keys())
+            levels = list(CthulhuGame.DIFFICULTY_LEVELS.keys())
             idx = levels.index(self.roll_params[key])
             idx = (idx + 1) % len(levels) if increment else (idx - 1) % len(levels)
             self.roll_params[key] = levels[idx]
@@ -105,14 +105,16 @@ class SkillRollPanel(BasePanel):
             bonus_die=self.roll_params["Bonus"],
             penalty_die=self.roll_params["Penalty"]
         )
-        result = evaluate_roll(
+        result = CthulhuGame.evaluate_skill_roll(
             roll,
             self.skill_val,
             bonus=self.roll_params["Bonus"],
             penalty=self.roll_params["Penalty"]
         )
 
-        self.result_label.color = result.stylize(DIFFICULTY_LEVELS[self.roll_params["Difficulty"]])
+        self.result_label.color = result.stylize(
+            CthulhuGame.DIFFICULTY_LEVELS[self.roll_params["Difficulty"]]
+        )
         self.result_label.text = result.summary()
 
 
