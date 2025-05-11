@@ -35,6 +35,10 @@ class BasePanel:
         """Override in child classes"""
         pass
 
+    def reset(self, **kwargs):
+        """Override in child classes"""
+        pass
+
     def update(self):
         if self.hal.is_button_pressed():
             if not self.awaiting_release:

@@ -113,9 +113,18 @@ class SkillRollPanel(BasePanel):
             "Penalty": 0,
             "Confirm": False
         }
+        self.selected_index = 0
+        self.mode = "select"
+        self.last_encoder_position = self.hal.get_encoder_position()
         self.result = None
         self.result_label.text = ""
         self.render_labels()
+
+    def attach_to(self):
+        super().attach_to()
+        self.context.hide_nav_button("prev")
+        self.context.show_nav_button("back", callback=lambda b: self.context.transition_back())
+        self.context.hide_nav_button("next")
 
     def roll(self):
         bonus = self.roll_params["Bonus"]

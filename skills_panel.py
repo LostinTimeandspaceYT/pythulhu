@@ -47,7 +47,12 @@ class SkillsPanel(BasePanel):
 
     def attach_to(self):
         super().attach_to()
+        self.context.show_nav_button("prev", callback=lambda b: self.prev_page())
+        self.context.show_nav_button("back", callback=lambda b: self.context.return_home())
+        self.context.show_nav_button("next", callback=lambda b: self.next_page())
         self.update_page()
+        self.mode = "select"
+        self.last_encoder_position = self.hal.get_encoder_position()
 
     def get_all_skill_lines(self) -> list[str]:
         sheet = self.character.sheet
