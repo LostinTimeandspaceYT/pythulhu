@@ -2,7 +2,7 @@
 class RollResult:
     def __init__(self, roll: int, outcome: str, level: int):
         """
-
+        A monad-like wrapper for games to display roll results to the screen.
         Args:
             roll (int): What the actual roll was
             outcome (str): description to display on screen
