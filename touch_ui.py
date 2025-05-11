@@ -28,7 +28,8 @@ class LightTouchButton:
         self.group.append(self.label)
 
     def attach_to(self, root_group):
-        root_group.append(self.group)
+        if self.group not in root_group:
+            root_group.append(self.group)
 
     def remove_from(self, root_group):
         if self.group in root_group:
@@ -104,7 +105,8 @@ class TouchButton:
         return self.button.selected
 
     def attach_to(self, group):
-        group.append(self.button)
+        if self.group not in group:
+            group.append(self.button)
 
     def register(self, manager):
         manager.add_button(self)
