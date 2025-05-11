@@ -1,7 +1,8 @@
 import displayio
+from ui_context import UIContext
 
 class BasePanel:
-    def __init__(self, context):
+    def __init__(self, context: UIContext):
         self.context = context
         self.hal = context.hal
         self.manager = context.manager
@@ -20,7 +21,8 @@ class BasePanel:
             self.hal.root_group.remove(self.group)
 
     def attach_to(self):
-        self.hal.root_group.append(self.group)
+        if self.group not in self.hal.root_group:
+            self.hal.root_group.append(self.group)
 
     def detach_from(self):
         if self.group in self.hal.root_group:
