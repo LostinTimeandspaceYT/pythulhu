@@ -8,8 +8,9 @@ class UIContext:
         self.character = character
         self.nav_buttons = nav_buttons
         self.active_panel = None
-        self.prev_panel = None
         self.panels = {}
+        self.panel_stack = []
+        self.home = None
 
     def register_panel(self, name: str, panel) -> None:
         self.panels[name] = panel
@@ -23,7 +24,6 @@ class UIContext:
             return
         if self.active_panel:
             self.active_panel.detach_from()
-            self.prev_panel = self.active_panel
         self.active_panel = next_panel
         next_panel.attach_to()
 
@@ -31,7 +31,7 @@ class UIContext:
         gc.collect()
         if self.active_panel:
             self.active_panel.detach_from()
-            self.prev_panel = self.active_panel
+            self.panel_stack.append(self.active_panel)
             self.active_panel = None
         if delay_secs > 0.0:
             sleep(delay_secs)
@@ -41,7 +41,7 @@ class UIContext:
         gc.collect()
         if self.active_panel:
             self.active_panel.detach_from()
-            self.prev_panel = self.active_panel
+            self.panel_stack.append(self.active_panel)
             self.active_panel = None
         if effect_callback is not None:
             effect_callback()
@@ -53,17 +53,39 @@ class UIContext:
             self.active_panel = None
         if delay_secs > 0.0:
             sleep(delay_secs)
-        if self.prev_panel:
-            self.active_panel, self.prev_panel = self.prev_panel, self.active_panel
+        if self.panel_stack:
+            self.active_panel = self.panel_stack.pop()
             self.active_panel.attach_to()
 
-    def go_back(self):
-        if self.active_panel:
-            self.active_panel.detach_from()
+    def clear_panel_stack(self):
+        self.panel_stack.clear()
 
-        if self.prev_panel:
-            self.active_panel, self.prev_panel = self.prev_panel, self.active_panel
-            self.active_panel.attach_to()
+    def set_home(self, name: str):
+        if name in self.panels:
+            self.home = name
+        else:
+            raise ValueError(f"Panel {name} is not registered")
+
+    def return_home(self):
+        self.panel_stack.clear()
+        if self.home:
+            self.transition_to(self.home)
+        else:
+            self.transition_to("main")
+
+    def hide_nav_button(self, name: str):
+        btn = self.nav_buttons.get(name)
+        if btn:
+            btn.remove_from(self.hal.root_group)
+            self.manager.unregister(btn)
+
+    def show_nav_button(self, name: str, callback=None):
+        btn = self.nav_buttons.get(name)
+        if btn:
+            if callback:
+                btn.callback = callback
+            btn.attach_to(self.hal.root_group)
+            btn.register(self.manager)
 
     def reset(self):
         self.hal.clear_display()
