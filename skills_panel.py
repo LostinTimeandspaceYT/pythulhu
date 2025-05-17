@@ -60,16 +60,25 @@ class SkillsPanel(BasePanel):
         lines = []
 
         for skill, value in skills.items():
-            if isinstance(value, dict):
+            # Check for nested (Language, Firearms, etc.)
+            if isinstance(value, dict) and not isinstance(value.get("Current"), int):
                 lines.append(f"{skill}:")
                 for subskill, subval in value.items():
                     val = subval.get("Current", "-") if isinstance(subval, dict) else subval
-                    lines.append(f"  {subskill}: {val}")
+                    key = f"{subskill}"
+                    mark = " !" if key in self.character.skills_to_improve else ""
+                    lines.append(f"  {subskill}: {val}{mark}")
             else:
                 val = value.get("Current", "-") if isinstance(value, dict) else value
-                lines.append(f"{skill}: {val}")
+                mark = " !" if skill in self.character.skills_to_improve else ""
+                lines.append(f"{skill}: {val}{mark}")
 
         return lines
+
+    def refresh_skills(self):
+        self.all_lines = self.get_all_skill_lines()
+        self.total_pages = (len(self.all_lines) + self.total_lines_per_page - 1) // self.total_lines_per_page
+        self.update_page()
 
     def update(self):
         current_position = self.hal.get_encoder_position()
@@ -150,6 +159,7 @@ class SkillsPanel(BasePanel):
         from skill_roll_panel import SkillRollPanel
 
         def close_panel(_result=None):
+            self.refresh_skills()
             self.context.transition_back()
 
         roll_panel = self.context.get_panel("roll")
@@ -159,7 +169,6 @@ class SkillsPanel(BasePanel):
             roll_panel = SkillRollPanel(
                 context=self.context,
                 skill_name=skill_name,
-                confirm_callback=None,
                 cancel_callback=close_panel
             )
             self.context.register_panel("roll", roll_panel)

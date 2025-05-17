@@ -2,13 +2,13 @@ from adafruit_display_text.label import Label
 import terminalio
 from base_panel import BasePanel
 from coc_game import CthulhuGame
+from coc_character import CthulhuCharacter
 
 
 class SkillRollPanel(BasePanel):
-    def __init__(self, context, skill_name, confirm_callback, cancel_callback):
+    def __init__(self, context, skill_name, cancel_callback):
         super().__init__(context)
-        self.character = context.character
-        self.confirm_callback = confirm_callback
+        self.character: CthulhuCharacter = context.character
         self.cancel_callback = cancel_callback
 
         skill_val = self.character.get_value_at(skill_name)
@@ -26,6 +26,7 @@ class SkillRollPanel(BasePanel):
         }
         self.result = None
         self.pushed = False
+        self.spent_luck = False
 
         # Explicit display order
         self.param_keys = [
@@ -119,13 +120,14 @@ class SkillRollPanel(BasePanel):
         self.last_encoder_position = self.hal.get_encoder_position()
         self.result = None
         self.pushed = False
+        self.spent_luck = False
         self.result_label.text = ""
         self.render_labels()
 
     def attach_to(self):
         super().attach_to()
         self.context.hide_nav_button("prev")
-        self.context.show_nav_button("back", callback=lambda b: self.context.transition_back())
+        self.context.show_nav_button("back", callback=self.cancel_callback)
         self.context.hide_nav_button("next")
 
     def roll(self):
@@ -144,6 +146,12 @@ class SkillRollPanel(BasePanel):
                 bonus=bonus,
                 penalty=penalty
             )
+            # If they pass the first roll, mark it for improvement
+            if self.result.success_level >= diff:
+                self.character.mark_skill_for_improvement(self.skill_name)
+
+            # TODO: else allow for push or spending luck. only push currently
+
         else:
             if self.result.success_level < 0 or self.pushed == True:
                 return
