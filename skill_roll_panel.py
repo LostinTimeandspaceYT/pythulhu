@@ -3,51 +3,38 @@ import terminalio
 from base_panel import BasePanel
 from coc_game import CthulhuGame
 from coc_character import CthulhuCharacter
+from coc_roll_params import CthulhuRollParams
+from coc_roll_result_panel import CthulhuRollResultPanel 
 
 
 class SkillRollPanel(BasePanel):
+    # Explicit display order
+    PARAM_KEYS = ["Bonus", "Penalty", "Difficulty", "Confirm"]
+
     def __init__(self, context, skill_name, cancel_callback):
         super().__init__(context)
         self.character: CthulhuCharacter = context.character
         self.cancel_callback = cancel_callback
-
         skill_val = self.character.get_value_at(skill_name)
         if isinstance(skill_val, dict):
             skill_val = skill_val.get("Current", 0)
 
         self.skill_name = skill_name
         self.skill_val = skill_val
-
-        self.roll_params = {
-            "Difficulty": "Normal",
-            "Bonus": 0,
-            "Penalty": 0,
-            "Confirm": False
-        }
         self.result = None
-        self.pushed = False
-        self.spent_luck = False
-
-        # Explicit display order
-        self.param_keys = [
-            'Bonus',
-            'Penalty',
-            'Difficulty',
-            'Confirm'
-        ]
+        self.bonus = 0
+        self.penalty = 0
+        self.difficulty = "Normal"
+        self.confirm_selected = False
         self.selected_index = 0
         self.last_encoder_position = self.hal.get_encoder_position()
-
         self.labels = []
         self._init_labels()
-
-        self.result_label = Label(terminalio.FONT, text="", color=0xFFFF00, scale=2, x=10, y=130)
-        self.group.append(self.result_label)
 
     def _init_labels(self):
         """Initialize Label objects once and reuse them."""
         y = 10
-        for _ in range(len(self.param_keys) + 1):
+        for _ in range(len(self.PARAM_KEYS) + 1):
             label = Label(terminalio.FONT, text="", color=0xFFFFFF, scale=2, x=10, y=y)
             self.labels.append(label)
             self.group.append(label)
@@ -56,21 +43,22 @@ class SkillRollPanel(BasePanel):
 
     def render_labels(self):
         y = 10
-        expected_text = f"Skill: {self.skill_name} ({self.skill_val})"
-        if self.labels[0].text != expected_text:
-            self.labels[0].text = expected_text
-        self.labels[0].y = y  # optional: skip if y never changes
+        self.labels[0].text = f"Skill: {self.skill_name} ({self.skill_val})"
+        self.labels[0].y = y
         y += 20
-
-        for i, key in enumerate(self.param_keys):
-            if self.mode == "select":
-                prefix = "> " if i == self.selected_index else "  "
-            else:  # edit mode
-                prefix = "* " if i == self.selected_index else "  "
-
-            self.labels[i + 1].text = f"{prefix}{key}: {self.roll_params[key]}"
-            self.labels[i + 1].y = y
-            y += 20
+        param_dict = {
+            "Bonus": self.bonus,
+            "Penalty": self.penalty,
+            "Difficulty": self.difficulty,
+            "Confirm": self.confirm_selected
+        }
+        self.render_option_labels(
+            labels=self.labels,
+            start_y=y,
+            selected_index=self.selected_index,
+            param_keys=self.PARAM_KEYS,
+            param_values=param_dict
+        )
 
     def on_mode_change(self):
         self.render_labels()
@@ -81,27 +69,32 @@ class SkillRollPanel(BasePanel):
             self.render_labels()
 
     def move_selection_down(self):
-        if self.selected_index < len(self.param_keys) - 1:
+        if self.selected_index < len(self.PARAM_KEYS) - 1:
             self.selected_index += 1
             self.render_labels()
 
     def modify_selected_param(self, increment=True):
-        key = self.param_keys[self.selected_index]
+        key = self.PARAM_KEYS[self.selected_index]
 
         if key == "Confirm":
-            self.roll_params["Confirm"] = not self.roll_params["Confirm"]
+            self.confirm_selected = not self.confirm_selected
 
-        if key == "Difficulty":
+        elif key == "Difficulty":
             levels = list(CthulhuGame.DIFFICULTY_LEVELS.keys())
-            idx = levels.index(self.roll_params[key])
+            idx = levels.index(self.difficulty)
             idx = (idx + 1) % len(levels) if increment else (idx - 1) % len(levels)
-            self.roll_params[key] = levels[idx]
+            self.difficulty = levels[idx]
 
-        elif key in ("Bonus", "Penalty"):
+        elif key == "Bonus":
             delta = 1 if increment else -1
-            self.roll_params[key] = max(0, min(3, self.roll_params[key] + delta))
+            self.bonus = max(0, min(3, self.bonus + delta))
+
+        elif key == "Penalty":
+            delta = 1 if increment else -1
+            self.penalty = max(0, min(3, self.penalty + delta))
 
         self.render_labels()
+
 
     def reset(self, skill_name: str):
         self.skill_name = skill_name
@@ -109,19 +102,14 @@ class SkillRollPanel(BasePanel):
         if isinstance(self.skill_val, dict):
             self.skill_val = self.skill_val.get("Current", 0)
 
-        self.roll_params = {
-            "Difficulty": "Normal",
-            "Bonus": 0,
-            "Penalty": 0,
-            "Confirm": False
-        }
+        self.bonus = 0
+        self.penalty = 0
+        self.difficulty = "Normal"
+        self.confirm_selected = False
         self.selected_index = 0
         self.mode = "select"
         self.last_encoder_position = self.hal.get_encoder_position()
         self.result = None
-        self.pushed = False
-        self.spent_luck = False
-        self.result_label.text = ""
         self.render_labels()
 
     def attach_to(self):
@@ -131,56 +119,38 @@ class SkillRollPanel(BasePanel):
         self.context.hide_nav_button("next")
 
     def roll(self):
-        bonus = self.roll_params["Bonus"]
-        penalty = self.roll_params["Penalty"]
-        diff = CthulhuGame.DIFFICULTY_LEVELS[self.roll_params["Difficulty"]]
-
-        if self.result is None: # Their first attempt
+        if self.result is None:
             roll = self.character.roll_skill(
-                bonus_die=bonus,
-                penalty_die=penalty
+                bonus_die=self.bonus,
+                penalty_die=self.penalty
             )
-            self.result = CthulhuGame.evaluate_skill_roll(
-                roll,
-                self.skill_val,
-                bonus=bonus,
-                penalty=penalty
+            roll_params = CthulhuRollParams(
+                name=self.skill_name,
+                base_val=self.skill_val,
+                bonus=self.bonus,
+                penalty=self.penalty,
+                difficulty=self.difficulty
             )
-            # If they pass the first roll, mark it for improvement
-            if self.result.success_level >= diff:
-                self.character.mark_skill_for_improvement(self.skill_name)
+            self.result = CthulhuGame.evaluate_roll(roll, params=roll_params)
 
-            # TODO: else allow for push or spending luck. only push currently
-
-        else:
-            if self.result.success_level < 0 or self.pushed == True:
-                return
-
-            if (self.result.passed(difficulty=diff)):
-                return
-
-            push = self.character.roll_skill(
-                bonus_die=bonus,
-                penalty_die=penalty
+            # TODO: Here, let's just create the result panel regardless.
+            # and let the result panel handle marking skills for improvement.
+            # if self.result.success_level >= roll_params.diff_level:
+            #     # TODO: Some skills cannot be improved, added flag in roll_params
+            #     self.character.mark_skill_for_improvement(self.skill_name)
+            panel = CthulhuRollResultPanel(
+                context=self.context,
+                result=self.result,
+                params=roll_params,
+                on_complete=self.cancel_callback
             )
-            self.result = CthulhuGame.evaluate_skill_roll(
-                push,
-                self.skill_val,
-                bonus=bonus,
-                penalty=penalty
-            )
-            self.result.outcome += "\n(Pushed)"
-            self.pushed = True
-
-        self.result_label.color = self.result.stylize(
-            difficulty=diff
-        )
-        self.result_label.text = self.result.summary()
+            self.context.register_panel("roll_result", panel)
+            self.context.transition_to("roll_result")
+            return
 
 
     def update(self):
         super().update()  # handles button press + mode toggle
-
         current_position = self.hal.get_encoder_position()
         if current_position != self.last_encoder_position:
             if self.mode == "select":
@@ -193,7 +163,7 @@ class SkillRollPanel(BasePanel):
             self.last_encoder_position = current_position
 
         # When we're finally ready to roll
-        if self.mode == "select" and self.roll_params.get("Confirm"):
+        if self.mode == "select" and self.confirm_selected:
             self.roll()
-            self.roll_params["Confirm"] = False
+            self.confirm_selected = False
             self.render_labels()
