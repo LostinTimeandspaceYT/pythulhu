@@ -1,4 +1,5 @@
 from roll_result import RollResult
+from coc_roll_params import CthulhuRollParams
 
 class CthulhuGame:
     DIFFICULTY_LEVELS = {
@@ -17,20 +18,20 @@ class CthulhuGame:
     }
 
     @classmethod
-    def get_skill_thresholds(cls, skill_val: int) -> dict:
+    def get_diff_level_thresholds(cls, val: int) -> dict:
         return {
-            "Normal": int(skill_val),
-            "Hard": int(skill_val * 0.5),
-            "Extreme": int(skill_val * 0.2)
+            "Normal": int(val),
+            "Hard": int(val * 0.5),
+            "Extreme": int(val * 0.2)
         }
 
     @classmethod
-    def evaluate_skill_roll(cls, roll: int, skill_val: int, bonus=0, penalty=0) -> RollResult:
-        thresholds = cls.get_skill_thresholds(skill_val)
+    def evaluate_roll(cls, roll, params: CthulhuRollParams) -> RollResult:
+        thresholds = cls.get_diff_level_thresholds(params.base_val)
 
-        if roll >= 96 and skill_val < 50 or roll == 100:
+        if roll >= 96 and params.base_val < 50 or roll == 100:
             outcome = "Fumble"
-        elif roll == 1 and bonus == 0 and penalty == 0:
+        elif roll == 1 and params.bonus == 0 and params.penalty == 0:
             outcome = "Critical Success"
         elif roll <= thresholds["Extreme"]:
             outcome = "Extreme Success"
@@ -45,6 +46,29 @@ class CthulhuGame:
         level = cls.SUCCESS_LEVELS.get(level_key, 0)
 
         return RollResult(roll, outcome, level)
+
+
+    # @classmethod
+    # def evaluate_roll(cls, roll: int, skill_val: int, bonus=0, penalty=0) -> RollResult:
+    #     thresholds = cls.get_diff_level_thresholds(skill_val)
+
+    #     if roll >= 96 and skill_val < 50 or roll == 100:
+    #         outcome = "Fumble"
+    #     elif roll == 1 and bonus == 0 and penalty == 0:
+    #         outcome = "Critical Success"
+    #     elif roll <= thresholds["Extreme"]:
+    #         outcome = "Extreme Success"
+    #     elif roll <= thresholds["Hard"]:
+    #         outcome = "Hard Success"
+    #     elif roll <= thresholds["Normal"]:
+    #         outcome = "Normal Success"
+    #     else:
+    #         outcome = "Fail"
+
+    #     level_key = outcome.split()[0]  # "Hard", "Fail", etc.
+    #     level = cls.SUCCESS_LEVELS.get(level_key, 0)
+
+    #     return RollResult(roll, outcome, level)
 
     @classmethod
     def get_luck_cost(cls, result: RollResult, threshold: int) -> int | None:
