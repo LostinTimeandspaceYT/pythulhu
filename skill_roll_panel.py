@@ -25,6 +25,7 @@ class SkillRollPanel(BasePanel):
             "Confirm": False
         }
         self.result = None
+        self.pushed = False
 
         # Explicit display order
         self.param_keys = [
@@ -117,6 +118,7 @@ class SkillRollPanel(BasePanel):
         self.mode = "select"
         self.last_encoder_position = self.hal.get_encoder_position()
         self.result = None
+        self.pushed = False
         self.result_label.text = ""
         self.render_labels()
 
@@ -129,6 +131,7 @@ class SkillRollPanel(BasePanel):
     def roll(self):
         bonus = self.roll_params["Bonus"]
         penalty = self.roll_params["Penalty"]
+        diff = CthulhuGame.DIFFICULTY_LEVELS[self.roll_params["Difficulty"]]
 
         if self.result is None: # Their first attempt
             roll = self.character.roll_skill(
@@ -142,8 +145,11 @@ class SkillRollPanel(BasePanel):
                 penalty=penalty
             )
         else:
-            if self.result.success_level != 0:
-                return # account for fumble or success
+            if self.result.success_level < 0 or self.pushed == True:
+                return
+
+            if (self.result.passed(difficulty=diff)):
+                return
 
             push = self.character.roll_skill(
                 bonus_die=bonus,
@@ -156,9 +162,10 @@ class SkillRollPanel(BasePanel):
                 penalty=penalty
             )
             self.result.outcome += "\n(Pushed)"
+            self.pushed = True
 
         self.result_label.color = self.result.stylize(
-            CthulhuGame.DIFFICULTY_LEVELS[self.roll_params["Difficulty"]]
+            difficulty=diff
         )
         self.result_label.text = self.result.summary()
 
