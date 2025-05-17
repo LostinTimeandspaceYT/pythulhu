@@ -96,11 +96,13 @@ class SkillsPanel(BasePanel):
     def next_page(self):
         if self.page < self.total_pages - 1:
             self.page += 1
+            self.selected_index = self.page * self.total_lines_per_page  # move to top of next page
             self.update_page()
 
     def prev_page(self):
         if self.page > 0:
             self.page -= 1
+            self.selected_index = self.page * self.total_lines_per_page  # move to top of next page
             self.update_page()
 
     def update_page(self):
