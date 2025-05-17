@@ -74,6 +74,17 @@ class CthulhuCharacter(PlayerCharacter):
         # Truncate if needed
         return lines[:max_lines]
 
+    def mark_skill_for_improvement(self, skill_name: str):
+        if skill_name not in self.skills_to_improve:
+            self.skills_to_improve.append(skill_name)
+
+    def get_improvable_skills(self) -> list[str]:
+        """Return a copy of the skills to improve."""
+        return self.skills_to_improve.copy()
+
+    def clear_improvements(self):
+        self.skills_to_improve.clear()
+
     def cast_spell(self, spell_name: str):
         print(f"Casting {spell_name}!")
         # TODO: Flesh out spell logic
