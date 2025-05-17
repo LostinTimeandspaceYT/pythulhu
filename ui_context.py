@@ -1,11 +1,12 @@
 import gc
 from time import sleep
+from player_character import PlayerCharacter
 
 class UIContext:
     def __init__(self, hal, manager, character, nav_buttons):
         self.hal = hal
         self.manager = manager
-        self.character = character
+        self.character: PlayerCharacter = character
         self.nav_buttons = nav_buttons
         self.active_panel = None
         self.panels = {}
