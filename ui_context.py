@@ -11,6 +11,7 @@ class UIContext:
         self.panels = {}
         self.panel_stack = []
         self.home = None
+        self.should_exit = False
 
     def register_panel(self, name: str, panel) -> None:
         self.panels[name] = panel

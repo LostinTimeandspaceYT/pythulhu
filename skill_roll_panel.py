@@ -155,7 +155,7 @@ class SkillRollPanel(BasePanel):
                 bonus=bonus,
                 penalty=penalty
             )
-            self.result.outcome += " (Pushed)"
+            self.result.outcome += "\n(Pushed)"
 
         self.result_label.color = self.result.stylize(
             CthulhuGame.DIFFICULTY_LEVELS[self.roll_params["Difficulty"]]
