@@ -61,7 +61,6 @@ class CthulhuCharacter(PlayerCharacter):
 
         lines += ["", "Characteristics:"]
 
-
         for stat, val in self.characteristics.items():
             if isinstance(val, dict):
                 lines.append(f"  {stat}: {val.get('Current', '-')}/{val.get('Maximum', '-')}")
@@ -92,14 +91,17 @@ class CthulhuCharacter(PlayerCharacter):
     def roll_skill(self, bonus_die: int, penalty_die: int):
         return CthulhuDice.roll_skill(bonus_die, penalty_die)
 
-    def change_hit_points(self, amount: int):
-        self.sheet[CHAR][HP]["Current"] += amount
+    def set_hit_points(self, value: int):
+        self.sheet[CHAR][HP]["Current"] = max(0, value)
 
-    def change_magic_points(self, amount: int):
-        self.sheet[CHAR][MP]["Current"] += amount
+    def set_magic_points(self, value: int):
+        self.sheet[CHAR][MP]["Current"] = max(0, value)
 
-    def change_sanity(self, amount: int):
-        self.sheet[CHAR][SAN]["Current"] += amount
+    def set_sanity(self, value: int):
+        self.sheet[CHAR][SAN]["Current"] = max(0, value)
+
+    def set_luck(self, value: int):
+        self.characteristics["Luck"] = max(0, value)
 
     def get_weapon_names(self):
         return [weapon["Name"] for weapon in self.weapons.values()]
@@ -148,16 +150,10 @@ class CthulhuCharacter(PlayerCharacter):
         return self.characteristics["Luck"]
 
 
-
 class PulpCharacter(CthulhuCharacter):
 
     def __init__(self, fpath: str):
         super().__init__(fpath)
-
-    # Modifiers
-    def change_luck(self, amount: int):
-        """similar to other change methods"""
-        self.characteristics["Luck"] += amount
 
     @property
     def archetype(self):
