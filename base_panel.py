@@ -31,6 +31,17 @@ class BasePanel:
     def toggle_mode(self):
         self.mode = "edit" if self.mode == "select" else "select"
 
+    def render_option_labels(self, labels, start_y: int, selected_index: int, param_keys: list[str], param_values: dict[str, any]):
+        y = start_y
+        for i, key in enumerate(param_keys):
+            if self.mode == "select":
+                prefix = "> " if i == selected_index else "  "
+            else:  # edit mode
+                prefix = "* " if i == selected_index else "  "
+            labels[i + 1].text = f"{prefix}{key}: {param_values[key]}"
+            labels[i + 1].y = y
+            y += 20
+
     def on_mode_change(self):
         """Override in child classes"""
         pass
