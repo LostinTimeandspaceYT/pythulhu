@@ -1,16 +1,123 @@
+from adafruit_display_text.label import Label
+import terminalio
+from coc_game import CthulhuGame
 from base_panel import BasePanel
 from roll_result import RollResult
 from coc_roll_params import CthulhuRollParams
 
 class CthulhuRollResultPanel(BasePanel):
+    PARAM_KEYS = ["Spend Luck", "Push", "Confirm"]
+
     def __init__(self, context, *, result: RollResult, params: CthulhuRollParams, on_complete):
         super().__init__(context)
         self.character = context.character
-        self.name = params.name
         self.result = result
         self.roll_params = params
         self.on_complete = on_complete
 
+        self.threshold = CthulhuGame.get_val_at_threshold(params.base_val, params.difficulty)
+        self.cost = CthulhuGame.get_luck_cost(self.result, self.threshold)
+
+        self.selected_index = 0
+        self.last_encoder_position = self.hal.get_encoder_position()
+        self.mode = "select"
+        self.spend_luck = False
+        self.push = False
+        self.confirm_selected = False
+        self.labels = []
+
+        self._init_labels()
+        self.attach_to()
+
+    def _init_labels(self):
+        y = 10
+        for _ in range(len(self.PARAM_KEYS) + 2):  # +1 for result, +1 for spacing
+            label = Label(terminalio.FONT, text="", color=0xFFFFFF, scale=2, x=10, y=y)
+            self.labels.append(label)
+            self.group.append(label)
+            y += 20
+        self.render_labels()
+
+    def render_labels(self):
+        y = 10
+        self.labels[0].text = self.result.summary()
+        self.labels[0].color = self.result.stylize(CthulhuGame.DIFFICULTY_LEVELS[self.roll_params.difficulty])
+        self.labels[0].y = y
+        y += 30
+
+        options = {
+            "Spend Luck": self.spend_luck,
+            "Push": self.push,
+            "Confirm": self.confirm_selected
+        }
+
+        self.render_option_labels(
+            labels=self.labels,
+            start_y=y,
+            selected_index=self.selected_index,
+            param_keys=self.PARAM_KEYS,
+            param_values=options
+        )
+
+    def move_selection_up(self):
+        if self.selected_index > 0:
+            self.selected_index -= 1
+            self.render_labels()
+
+    def move_selection_down(self):
+        if self.selected_index < len(self.PARAM_KEYS) - 1:
+            self.selected_index += 1
+            self.render_labels()
+
+    def modify_selected_param(self, increment=True):
+        key = self.PARAM_KEYS[self.selected_index]
+        if key == "Spend Luck":
+            if self.cost < self.character.current_luck:
+                self.spend_luck = not self.spend_luck
+                self.push = not self.spend_luck
+        elif key == "Push":
+            self.push = not self.push
+            self.spend_luck = not self.push
+        elif key == "Confirm":
+            self.confirm_selected = not self.confirm_selected
+
+        self.render_labels()
+
+    def finalize_roll(self):
+        if self.spend_luck:
+            if self.cost <= self.character.current_luck:
+                self.character.set_luck(self.character.current_luck - self.cost)
+                self.result.success_level += 1
+                self.result.outcome += f"\nSpent {self.cost} Luck"
+        elif self.push:
+            new_roll = self.character.roll_skill(self.roll_params.bonus, self.roll_params.penalty)
+            self.result = CthulhuGame.evaluate_roll(new_roll, self.roll_params)
+            self.result.outcome += "\n(Pushed)"
+
+        self.on_complete(self.result)
+
+    def update(self):
+        super().update()
+
+        pos = self.hal.get_encoder_position()
+        if pos != self.last_encoder_position:
+            if self.mode == "select":
+                if pos > self.last_encoder_position:
+                    self.move_selection_down()
+                else:
+                    self.move_selection_up()
+            elif self.mode == "edit":
+                self.modify_selected_param(increment=(pos > self.last_encoder_position))
+            self.last_encoder_position = pos
+
+        if self.hal.is_button_pressed():
+            self.modify_selected_param()
+            while self.hal.is_button_pressed():
+                pass
+        
+        if self.confirm_selected:
+            self.confirm_selected = False
+            self.finalize_roll()
 
 
     #         luck_cost = CthulhuGame.get_luck_cost(self.result, threshold)

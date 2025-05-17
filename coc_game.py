@@ -26,6 +26,10 @@ class CthulhuGame:
         }
 
     @classmethod
+    def get_val_at_threshold(cls, val: int, difficulty: str="Normal") -> int:
+        return cls.get_diff_level_thresholds(val)[difficulty]
+
+    @classmethod
     def evaluate_roll(cls, roll, params: CthulhuRollParams) -> RollResult:
         thresholds = cls.get_diff_level_thresholds(params.base_val)
 

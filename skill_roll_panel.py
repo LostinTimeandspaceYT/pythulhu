@@ -144,6 +144,10 @@ class SkillRollPanel(BasePanel):
                 params=roll_params,
                 on_complete=self.cancel_callback
             )
+            prev = self.context.active_panel
+            if prev:
+                prev.detach_from()
+                del self.context.panels["roll"]
             self.context.register_panel("roll_result", panel)
             self.context.transition_to("roll_result")
             return
