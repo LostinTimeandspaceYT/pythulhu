@@ -29,7 +29,16 @@ class FileManager:
         return CHARACTER_PATH + game + "/" + character_name + ".json"
 
     @classmethod
-    def list_all_characters(cls, game: str):
+    def list_characters(cls, game: str) -> list[str]:
+        fpath = CHARACTER_PATH + game
+        return [pc[:-5] for pc in os.listdir(fpath) if pc.endswith(".json")]
+
+    @classmethod
+    def character_exists(cls, game: str, name: str) -> bool:
+        return os.path.exists(cls.get_character_path(game, name))
+
+    @classmethod
+    def list_all_character_paths(cls, game: str):
         fpath = CHARACTER_PATH + game
         for pc in os.listdir(fpath):
             yield pc

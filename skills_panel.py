@@ -171,5 +171,5 @@ class SkillsPanel(BasePanel):
                 skill_name=skill_name,
                 cancel_callback=close_panel
             )
-            self.context.register_panel("roll", roll_panel)
+            self.context.cache_panel("roll", roll_panel)
         self.context.transition_to("roll")

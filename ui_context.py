@@ -1,14 +1,12 @@
 import gc
 from time import sleep
-from player_character import PlayerCharacter
 from touch_ui import TouchManager
 from hardware import HAL
 
 class UIContext:
-    def __init__(self, hal, manager, character, nav_buttons):
+    def __init__(self, hal, manager, nav_buttons):
         self.hal: HAL = hal
         self.manager: TouchManager = manager
-        self.character: PlayerCharacter = character
         self.nav_buttons = nav_buttons
         self.active_panel = None
         self.home = None

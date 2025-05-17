@@ -3,10 +3,7 @@ from ui_context import UIContext
 
 class BasePanel:
     def __init__(self, context: UIContext):
-        self.context = context
         self.hal = context.hal
-        self.manager = context.manager
-        self.character = context.character
         self.group = displayio.Group()
         self.mode = "select"  # or "edit"
         self.awaiting_release = False
