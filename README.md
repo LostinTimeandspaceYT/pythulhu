@@ -17,6 +17,21 @@ Display: [2.8" TFT Touch Shield](https://www.adafruit.com/product/1651)
 
 Encoder: [I2C Stemma QT Encoder Breakout](https://www.adafruit.com/product/5880)
 
+
+## Software Architecture
+
+[ FileManager ]         -- handles file IO (JSON, images)
+     ↓
+[ UIContext ]           -- manages display, touch input, LEDs, and encoder
+     ↓
+[ GameFactory ]         -- lets user pick game + character
+     ↓
+[ GameRunner ]          -- runs one game, manages UIContext + main loop
+     ↓
+[ Game (e.g. CthulhuGame) ] -- owns PanelPool, game logic, roll logic
+     ↓
+[ PanelPool ]           -- game-specific panel reuse
+
 ## Chaosium's Fan Material Policy  
 
 “This application uses trademarks and/or copyrights owned by Chaosium Inc/Moon Design Publications LLC, which are used under Chaosium Inc’s Fan Material Policy.
