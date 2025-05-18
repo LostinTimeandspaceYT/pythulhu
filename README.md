@@ -21,15 +21,25 @@ Encoder: [I2C Stemma QT Encoder Breakout](https://www.adafruit.com/product/5880)
 ## Software Architecture
 
 [ FileManager ]         -- handles file IO (JSON, images)
-     ↓
+
+↓
+     
 [ UIContext ]           -- manages display, touch input, LEDs, and encoder
-     ↓
+
+↓
+     
 [ GameFactory ]         -- lets user pick game + character
-     ↓
+
+↓
+     
 [ GameRunner ]          -- runs one game, manages UIContext + main loop
-     ↓
+
+↓
+     
 [ Game (e.g. CthulhuGame) ] -- owns PanelPool, game logic, roll logic
-     ↓
+
+↓
+     
 [ PanelPool ]           -- game-specific panel reuse
 
 ## Chaosium's Fan Material Policy  
