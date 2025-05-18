@@ -1,7 +1,13 @@
 from roll_result import RollResult
 from coc_roll_params import CthulhuRollParams
+from panel_pool import PanelPool
+from skills_panel import SkillsPanel
+from main_menu_panel import MainMenuPanel
+from touch_ui import LightTouchButton
 
 class CthulhuGame:
+    _instance = None
+
     DIFFICULTY_LEVELS = {
         "Normal": 1,
         "Hard": 2,
@@ -17,6 +23,41 @@ class CthulhuGame:
         "Critical": 4
     }
 
+    # Singleton in Python
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super(CthulhuGame, cls).__new__(cls)
+        return cls._instance
+
+    def __init__(self):
+        # Use bind_x to attach.
+        self.character = None
+        self._panels = PanelPool()
+
+    def bind_character(self, character):
+        self.character = character
+
+    def get_panel_pool(self):
+        return self._panels
+
+    def build_main_menu(self, context):
+        panel = MainMenuPanel(context)
+
+        # Add game-specific buttons
+        skills_btn = LightTouchButton("skills", 50, 60, 220, 30, "Skills", callback=lambda b: self.open_skills_panel(context))
+        panel.add_button(skills_btn)
+        return panel
+
+    def setup_panels(self, context):
+        pool = self.get_panel_pool()
+        pool.register_factory("main", lambda: self.build_main_menu(context))
+        pool.register_factory("skills", lambda: SkillsPanel(self, context))
+
+    def open_skills_panel(self, context):
+        panel = self.get_panel_pool().get("skills")
+        context.cache_panel("skills", panel)
+        context.transition_to("skills")
+
     @classmethod
     def get_diff_level_thresholds(cls, val: int) -> dict:
         return {
@@ -30,10 +71,15 @@ class CthulhuGame:
         return cls.get_diff_level_thresholds(val)[difficulty]
 
     @classmethod
+    def is_success(cls, result: RollResult, params: CthulhuRollParams):
+        return result.success_level >= cls.DIFFICULTY_LEVELS[params.difficulty]
+
+    # TODO: TEST
+    @classmethod
     def evaluate_roll(cls, roll, params: CthulhuRollParams) -> RollResult:
         thresholds = cls.get_diff_level_thresholds(params.base_val)
 
-        if roll >= 96 and params.base_val < 50 or roll == 100:
+        if (roll >= 96 and params.base_val < 50) or roll == 100:
             outcome = "Fumble"
         elif roll == 1 and params.bonus == 0 and params.penalty == 0:
             outcome = "Critical Success"
@@ -50,29 +96,6 @@ class CthulhuGame:
         level = cls.SUCCESS_LEVELS.get(level_key, 0)
 
         return RollResult(roll, outcome, level)
-
-
-    # @classmethod
-    # def evaluate_roll(cls, roll: int, skill_val: int, bonus=0, penalty=0) -> RollResult:
-    #     thresholds = cls.get_diff_level_thresholds(skill_val)
-
-    #     if roll >= 96 and skill_val < 50 or roll == 100:
-    #         outcome = "Fumble"
-    #     elif roll == 1 and bonus == 0 and penalty == 0:
-    #         outcome = "Critical Success"
-    #     elif roll <= thresholds["Extreme"]:
-    #         outcome = "Extreme Success"
-    #     elif roll <= thresholds["Hard"]:
-    #         outcome = "Hard Success"
-    #     elif roll <= thresholds["Normal"]:
-    #         outcome = "Normal Success"
-    #     else:
-    #         outcome = "Fail"
-
-    #     level_key = outcome.split()[0]  # "Hard", "Fail", etc.
-    #     level = cls.SUCCESS_LEVELS.get(level_key, 0)
-
-    #     return RollResult(roll, outcome, level)
 
     @classmethod
     def get_luck_cost(cls, result: RollResult, threshold: int) -> int | None:

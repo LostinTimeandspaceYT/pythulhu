@@ -4,9 +4,9 @@ from text_viewport import TextViewport
 from base_panel import BasePanel
 
 class SkillsPanel(BasePanel):
-    def __init__(self, context, x=10, y=10, width=300, height=160, lines_per_column=7):
+    def __init__(self, game, context, x=10, y=10, width=300, height=160, lines_per_column=7):
         super().__init__(context)
-        self.character = context.character
+        self.character = game.character
         self.lines_per_column = lines_per_column
         self.total_lines_per_page = lines_per_column * 2
         self.selected_index = 0

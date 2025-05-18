@@ -3,11 +3,12 @@ from adafruit_display_text.label import Label
 import terminalio
 
 class SelectorPanel(BasePanel):
-    def __init__(self, context, title: str, options: list[str], on_select):
+    def __init__(self, context, title: str, options: list[str], on_select, on_cancel=None):
         super().__init__(context)
         self.title = title
         self.options = options
         self.on_select = on_select
+        self.on_cancel = on_cancel
         self.selected_index = 0
         self.last_encoder_position = self.hal.get_encoder_position()
         self.labels = []
@@ -34,6 +35,16 @@ class SelectorPanel(BasePanel):
             param_keys=self.options,
             param_values={opt: "" for opt in self.options}  # no values, just labels
         )
+
+    def attach_to(self):
+        super().attach_to()
+        self.context.hide_nav_button("prev")
+        self.context.hide_nav_button("next")
+
+        if self.on_cancel:
+            self.context.show_nav_button("back", callback=lambda b: self.on_cancel())
+        else:
+            self.context.hide_nav_button("back")
 
     def move_selection_up(self):
         if self.selected_index > 0:

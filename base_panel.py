@@ -3,6 +3,7 @@ from ui_context import UIContext
 
 class BasePanel:
     def __init__(self, context: UIContext):
+        self.context = context # Used in child classes
         self.hal = context.hal
         self.group = displayio.Group()
         self.mode = "select"  # or "edit"
