@@ -26,8 +26,7 @@ class MainMenuPanel(BasePanel):
         super().attach_to()
         for btn in self.buttons:
             btn.register(self.context.manager)
-
-        self.context.show_nav_button("back", callback=self.quit_game)  # or hide it
+        self.context.show_nav_button("back", callback=self.quit_game)
         self.context.hide_nav_button("next")
         self.context.hide_nav_button("prev")
 

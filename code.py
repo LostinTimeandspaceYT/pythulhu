@@ -35,10 +35,8 @@ def start_main_menu():
     factory.select_and_build_runner(on_runner_ready=start_game)
 
 
-gc.collect()
-print("[DEBUG] Before game factory, mem_free:", gc.mem_free())
-
 # Kick off game AFTER initial boot
+gc.collect()
 start_main_menu()
 
 while not context.should_exit:
