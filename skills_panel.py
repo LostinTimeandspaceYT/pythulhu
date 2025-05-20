@@ -1,12 +1,11 @@
-# skills_panel.py
-
+from adafruit_display_shapes.line import Line
 from text_viewport import TextViewport
 from base_panel import BasePanel
 
 class SkillsPanel(BasePanel):
     def __init__(self, game, context, x=10, y=10, width=300, height=160, lines_per_column=7):
         super().__init__(context)
-        self.character = game.character
+        self.game = game
         self.lines_per_column = lines_per_column
         self.total_lines_per_page = lines_per_column * 2
         self.selected_index = 0
@@ -15,7 +14,6 @@ class SkillsPanel(BasePanel):
         self.last_encoder_position = self.hal.get_encoder_position()
         self.awaiting_release = False
 
-        # Left viewport
         self.left_view = TextViewport(
             x=x,
             y=y,
@@ -23,11 +21,10 @@ class SkillsPanel(BasePanel):
             height=height,
             max_lines=lines_per_column,
             line_height=14,
-            show_background=True,
-            background_color=0x111133
+            show_background=False,
+            background_color=0x111133,
         )
 
-        # Right viewport
         self.right_view = TextViewport(
             x=x + width // 2 + 5,
             y=y,
@@ -35,12 +32,16 @@ class SkillsPanel(BasePanel):
             height=height,
             max_lines=lines_per_column,
             line_height=14,
-            show_background=True,
-            background_color=0x111133
+            show_background=False,
+            background_color=0x111133,
         )
 
         self.group.append(self.left_view.group)
         self.group.append(self.right_view.group)
+        # Vertical divider line between the columns
+        divider_x =  width // 2
+        self.divider = Line(divider_x, y, divider_x, y + height, color=0x444444)
+        self.group.append(self.divider)
 
         self.all_lines = self.get_all_skill_lines()
         self.total_pages = (len(self.all_lines) + self.total_lines_per_page - 1) // self.total_lines_per_page
@@ -53,24 +54,31 @@ class SkillsPanel(BasePanel):
         self.update_page()
         self.mode = "select"
         self.last_encoder_position = self.hal.get_encoder_position()
+        import gc
+        gc.collect()
+        print("[DEBUG] After attaching SkillsPanel, mem_free:", gc.mem_free())
+
+    def detach_from(self):
+        self.all_lines = []
+        return super().detach_from()
+
 
     def get_all_skill_lines(self) -> list[str]:
-        sheet = self.character.sheet
+        sheet = self.game.character.sheet
         skills = sheet.get("Skills", {})
         lines = []
 
         for skill, value in skills.items():
-            # Check for nested (Language, Firearms, etc.)
             if isinstance(value, dict) and not isinstance(value.get("Current"), int):
                 lines.append(f"{skill}:")
                 for subskill, subval in value.items():
                     val = subval.get("Current", "-") if isinstance(subval, dict) else subval
                     key = f"{subskill}"
-                    mark = " !" if key in self.character.skills_to_improve else ""
+                    mark = " !" if key in self.game.character.skills_to_improve else ""
                     lines.append(f"  {subskill}: {val}{mark}")
             else:
                 val = value.get("Current", "-") if isinstance(value, dict) else value
-                mark = " !" if skill in self.character.skills_to_improve else ""
+                mark = " !" if skill in self.game.character.skills_to_improve else ""
                 lines.append(f"{skill}: {val}{mark}")
 
         return lines
@@ -105,13 +113,13 @@ class SkillsPanel(BasePanel):
     def next_page(self):
         if self.page < self.total_pages - 1:
             self.page += 1
-            self.selected_index = self.page * self.total_lines_per_page  # move to top of next page
+            self.selected_index = self.page * self.total_lines_per_page
             self.update_page()
 
     def prev_page(self):
         if self.page > 0:
             self.page -= 1
-            self.selected_index = self.page * self.total_lines_per_page  # move to top of next page
+            self.selected_index = self.page * self.total_lines_per_page
             self.update_page()
 
     def update_page(self):
@@ -157,19 +165,30 @@ class SkillsPanel(BasePanel):
 
     def open_skill_roll_panel(self, skill_name: str):
         from skill_roll_panel import SkillRollPanel
+        skill_val = self.game.character.get_value_at(skill_name)
 
         def close_panel(_result=None):
             self.refresh_skills()
-            self.context.transition_back()
+            self.context.transition_to("main")
+
+        self.game.get_panel_pool().release("skills")
+        self.hal.clear_display()
+        # Debugging. This panel uses a f***-ton of memory
+        import gc
+        gc.collect()
+        print("[DEBUG] Released SkillsPanel:", gc.mem_free())
 
         roll_panel = self.context.get_panel("roll")
         if roll_panel:
             roll_panel.reset(skill_name=skill_name)
         else:
             roll_panel = SkillRollPanel(
+                game=self.game,
                 context=self.context,
                 skill_name=skill_name,
+                skill_val=skill_val,
                 cancel_callback=close_panel
             )
             self.context.cache_panel("roll", roll_panel)
+
         self.context.transition_to("roll")
