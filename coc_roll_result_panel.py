@@ -2,15 +2,18 @@ from adafruit_display_text.label import Label
 import terminalio
 from coc_game import CthulhuGame
 from base_panel import BasePanel
-from roll_result import RollResult
-from coc_roll_params import CthulhuRollParams
 
 class CthulhuRollResultPanel(BasePanel):
+    __slots__ = (
+        "game", "result", "roll_params", "on_complete", "threshold", "cost",
+        "selected_index", "last_encoder_position", "mode", "spend_luck", "push",
+        "confirm_selected", "labels"
+    )
     PARAM_KEYS = ["Spend Luck", "Push", "Confirm"]
 
-    def __init__(self, context, *, result: RollResult, params: CthulhuRollParams, on_complete):
+    def __init__(self, game, context, *, result, params, on_complete):
         super().__init__(context)
-        self.character = context.character
+        self.game = game
         self.result = result
         self.roll_params = params
         self.on_complete = on_complete
@@ -40,7 +43,9 @@ class CthulhuRollResultPanel(BasePanel):
 
     def render_labels(self):
         y = 10
-        self.labels[0].text = self.result.summary()
+        summary_text = self.result.summary()
+        if self.labels[0].text != summary_text:
+            self.labels[0].text = summary_text
         self.labels[0].color = self.result.stylize(CthulhuGame.DIFFICULTY_LEVELS[self.roll_params.difficulty])
         self.labels[0].y = y
         y += 30
@@ -59,6 +64,12 @@ class CthulhuRollResultPanel(BasePanel):
             param_values=options
         )
 
+
+    def detach_from(self):
+        for label in self.labels:
+            label.text = ""
+        return super().detach_from()
+
     def move_selection_up(self):
         if self.selected_index > 0:
             self.selected_index -= 1
@@ -72,7 +83,7 @@ class CthulhuRollResultPanel(BasePanel):
     def modify_selected_param(self, increment=True):
         key = self.PARAM_KEYS[self.selected_index]
         if key == "Spend Luck":
-            if self.cost < self.character.current_luck:
+            if self.cost < self.game.character.current_luck:
                 self.spend_luck = not self.spend_luck
                 self.push = not self.spend_luck
         elif key == "Push":
@@ -85,12 +96,12 @@ class CthulhuRollResultPanel(BasePanel):
 
     def finalize_roll(self):
         if self.spend_luck:
-            if self.cost <= self.character.current_luck:
-                self.character.set_luck(self.character.current_luck - self.cost)
+            if self.cost <= self.game.character.current_luck:
+                self.game.character.set_luck(self.game.character.current_luck - self.cost)
                 self.result.success_level += 1
                 self.result.outcome += f"\nSpent {self.cost} Luck"
         elif self.push:
-            new_roll = self.character.roll_skill(self.roll_params.bonus, self.roll_params.penalty)
+            new_roll = self.game.character.roll_skill(self.roll_params.bonus, self.roll_params.penalty)
             self.result = CthulhuGame.evaluate_roll(new_roll, self.roll_params)
             self.result.outcome += "\n(Pushed)"
 
@@ -121,7 +132,7 @@ class CthulhuRollResultPanel(BasePanel):
 
 
     #         luck_cost = CthulhuGame.get_luck_cost(self.result, threshold)
-    #         if luck_cost and luck_cost <= self.character.current_luck:
+    #         if luck_cost and luck_cost <= self.game.character.current_luck:
     #             self.pending_luck_cost = luck_cost
     #             self.result.outcome += f"\nCan spend {luck_cost} Luck to pass"
     #             # Wait for user confirmation before proceeding
@@ -134,7 +145,7 @@ class CthulhuRollResultPanel(BasePanel):
     #     if self.result.success_level >= diff:
     #         return
 
-    #     push = self.character.roll_skill(
+    #     push = self.game.character.roll_skill(
     #         bonus_die=bonus,
     #         penalty_die=penalty
     #     )

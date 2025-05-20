@@ -2,7 +2,6 @@ from adafruit_display_text.label import Label
 import terminalio
 from base_panel import BasePanel
 from coc_game import CthulhuGame
-from coc_character import CthulhuCharacter
 from coc_roll_params import CthulhuRollParams
 from coc_roll_result_panel import CthulhuRollResultPanel 
 
@@ -10,25 +9,28 @@ from coc_roll_result_panel import CthulhuRollResultPanel
 class SkillRollPanel(BasePanel):
     # Explicit display order
     PARAM_KEYS = ["Bonus", "Penalty", "Difficulty", "Confirm"]
+    __slots__ = (
+    "cancel_callback",
+    "skill_val",
+    "skill_name",
+    "result",
+    "bonus",
+    "penalty",
+    "difficulty",
+    "confirm_selected",
+    "selected_index",
+    "last_encoder_position",
+    "labels"
+    )
 
-    def __init__(self, context, skill_name, cancel_callback):
+    def __init__(self, game, context, skill_name: str, skill_val: int, cancel_callback=None):
         super().__init__(context)
-        self.character: CthulhuCharacter = context.character
+        self.game = game
         self.cancel_callback = cancel_callback
-        skill_val = self.character.get_value_at(skill_name)
-        if isinstance(skill_val, dict):
-            skill_val = skill_val.get("Current", 0)
-
-        self.skill_name = skill_name
         self.skill_val = skill_val
-        self.result = None
-        self.bonus = 0
-        self.penalty = 0
-        self.difficulty = "Normal"
-        self.confirm_selected = False
-        self.selected_index = 0
-        self.last_encoder_position = self.hal.get_encoder_position()
+        self.skill_name = skill_name
         self.labels = []
+        self._reset_state()
         self._init_labels()
 
     def _init_labels(self):
@@ -41,9 +43,18 @@ class SkillRollPanel(BasePanel):
             y += 20
         self.render_labels()
 
+    def _reset_state(self):
+        self.result = None
+        self.bonus = 0
+        self.penalty = 0
+        self.difficulty = "Normal"
+        self.confirm_selected = False
+        self.selected_index = 0
+        self.last_encoder_position = self.hal.get_encoder_position()
+
     def render_labels(self):
         y = 10
-        self.labels[0].text = f"Skill: {self.skill_name} ({self.skill_val})"
+        self.labels[0].text = "Skill: %s (%d)" % (self.skill_name, self.skill_val)
         self.labels[0].y = y
         y += 20
         param_dict = {
@@ -95,21 +106,10 @@ class SkillRollPanel(BasePanel):
 
         self.render_labels()
 
-
-    def reset(self, skill_name: str):
+    def reset(self, skill_name: str, skill_val: int):
         self.skill_name = skill_name
-        self.skill_val = self.character.get_value_at(skill_name)
-        if isinstance(self.skill_val, dict):
-            self.skill_val = self.skill_val.get("Current", 0)
-
-        self.bonus = 0
-        self.penalty = 0
-        self.difficulty = "Normal"
-        self.confirm_selected = False
-        self.selected_index = 0
-        self.mode = "select"
-        self.last_encoder_position = self.hal.get_encoder_position()
-        self.result = None
+        self.skill_val = skill_val
+        self._reset_state()
         self.render_labels()
 
     def attach_to(self):
@@ -118,9 +118,14 @@ class SkillRollPanel(BasePanel):
         self.context.show_nav_button("back", callback=self.cancel_callback)
         self.context.hide_nav_button("next")
 
+    def detach_from(self):
+        for label in self.labels:
+            label.text = ""
+        return super().detach_from()
+
     def roll(self):
         if self.result is None:
-            roll = self.character.roll_skill(
+            roll = self.game.character.roll_skill(
                 bonus_die=self.bonus,
                 penalty_die=self.penalty
             )
@@ -139,6 +144,7 @@ class SkillRollPanel(BasePanel):
             #     # TODO: Some skills cannot be improved, added flag in roll_params
             #     self.character.mark_skill_for_improvement(self.skill_name)
             panel = CthulhuRollResultPanel(
+                game=self.game,
                 context=self.context,
                 result=self.result,
                 params=roll_params,
@@ -149,7 +155,8 @@ class SkillRollPanel(BasePanel):
                 prev.detach_from()
                 del self.context.panels["roll"]
             self.context.cache_panel("roll_result", panel)
-            self.context.transition_to("roll_result")
+            self.context.transition_to("roll_result", 1.5)
+            self.result = None
             return
 
 
