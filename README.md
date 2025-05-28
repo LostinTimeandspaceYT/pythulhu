@@ -4,7 +4,7 @@
 
 This project uses CircuitPython v9.x.x
 
-> [!note] Work In Progress
+> [!NOTE]
 > This is a refactoring of DiceKracken, a now defunct project.
 
 More to come in the following months:
