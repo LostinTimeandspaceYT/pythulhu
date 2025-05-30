@@ -1,4 +1,5 @@
 import os
+import busio
 import digitalio
 import board
 import storage
@@ -13,8 +14,9 @@ class FileManager:
     @classmethod
     def mount_sdcard(cls):
         # Connect to the card and mount the filesystem.
+        spi = busio.SPI(board.SD_SCK, board.SD_MOSI, board.SD_MISO)
         cs = digitalio.DigitalInOut(board.SD_CS)
-        sdcard = adafruit_sdcard.SDCard(board.SPI(), cs)
+        sdcard = adafruit_sdcard.SDCard(spi, cs)
         vfs = storage.VfsFat(sdcard)
         storage.mount(vfs, MOUNT_POINT)
 
