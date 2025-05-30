@@ -4,8 +4,16 @@
 
 This project uses CircuitPython v9.x.x
 
-> [!NOTE]
-> This is a refactoring of DiceKracken, a now defunct project.
+## Libraries & Dependencies
+
+- `adafruit_button`
+- `adafruit_display_text`
+- `adafruit_display_shapes`
+- `adafruit_sdcard`
+- `adafruit_seesaw`
+- `adafruit_tsc2007`
+- `adafruit_ili9431`
+- `neopixel`
 
 More to come in the following months:
 
