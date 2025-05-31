@@ -138,11 +138,6 @@ class SkillRollPanel(BasePanel):
             )
             self.result = CthulhuGame.evaluate_roll(roll, params=roll_params)
 
-            # TODO: Here, let's just create the result panel regardless.
-            # and let the result panel handle marking skills for improvement.
-            # if self.result.success_level >= roll_params.diff_level:
-            #     # TODO: Some skills cannot be improved, added flag in roll_params
-            #     self.character.mark_skill_for_improvement(self.skill_name)
             panel = CthulhuRollResultPanel(
                 game=self.game,
                 context=self.context,
@@ -155,7 +150,7 @@ class SkillRollPanel(BasePanel):
                 prev.detach_from()
                 self.context.remove_panel("roll")
             self.context.cache_panel("roll_result", panel)
-            self.context.transition_to("roll_result", 1.5)
+            self.context.transition_to("roll_result", 1)
             self.result = None
             return
 

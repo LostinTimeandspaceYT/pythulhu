@@ -91,26 +91,48 @@ class CthulhuRollResultPanel(BasePanel):
 
     def modify_selected_param(self, increment=True):
         key = self.PARAM_KEYS[self.selected_index]
+
+        if key == "Confirm":
+            self.confirm_selected = not self.confirm_selected
+            self.render_labels()
+            return
+
+        if self.roll_mode == 'complete':
+            return
+
         if key == "Spend Luck":
             if self.cost < self.game.character.current_luck:
                 self.roll_mode = 'luck' if self.roll_mode != 'luck' else None
         elif key == "Push":
-                self.roll_mode = 'push' if self.roll_mode != 'push' else None
-        elif key == "Confirm":
-            self.confirm_selected = not self.confirm_selected
+            self.roll_mode = 'push' if self.roll_mode != 'push' else None
 
         self.render_labels()
 
     def finalize_roll(self):
+
         if self.roll_mode == 'luck':
             if self.cost <= self.game.character.current_luck:
                 self.game.character.set_luck(self.game.character.current_luck - self.cost)
                 self.result.success_level += 1
                 self.result.outcome += f"\nSpent {self.cost} Luck"
+                self.roll_mode = 'complete'
+                self.render_labels()
+                return
         elif self.roll_mode == 'push':
             new_roll = self.game.character.roll_skill(self.roll_params.bonus, self.roll_params.penalty)
             self.result = CthulhuGame.evaluate_roll(new_roll, self.roll_params)
-            self.result.outcome += "\n(Pushed)"
+            self.result.outcome = f"{self.result.outcome}\n-- PUSHED ROLL --"
+            self.roll_mode = 'complete'
+            self.render_labels()
+            return
+
+        # If it was a clean success, mark for improvement
+        if (
+            self.roll_mode is None and
+            self.passed and
+            self.roll_params.can_improve
+        ):
+            self.game.character.mark_skill_for_improvement(self.roll_params.name)
 
         self.on_complete(self.result)
 
