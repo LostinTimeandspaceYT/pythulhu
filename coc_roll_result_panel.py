@@ -19,7 +19,7 @@ class CthulhuRollResultPanel(BasePanel):
         self.on_complete = on_complete
 
         self.threshold = CthulhuGame.get_val_at_threshold(params.base_val, params.difficulty)
-        self.cost = CthulhuGame.get_luck_cost(self.result, self.threshold)
+        self.cost = CthulhuGame.get_luck_cost(self.result, self.threshold) or 100
         self.passed = self.result.success_level >= CthulhuGame.DIFFICULTY_LEVELS[self.roll_params.difficulty]
         self.PARAM_KEYS = ["Confirm"] if self.passed else ["Spend Luck", "Push", "Confirm"]
 
