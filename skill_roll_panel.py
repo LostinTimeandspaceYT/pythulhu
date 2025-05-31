@@ -153,7 +153,7 @@ class SkillRollPanel(BasePanel):
             prev = self.context.active_panel
             if prev:
                 prev.detach_from()
-                del self.context.panels["roll"]
+                self.context.remove_panel("roll")
             self.context.cache_panel("roll_result", panel)
             self.context.transition_to("roll_result", 1.5)
             self.result = None

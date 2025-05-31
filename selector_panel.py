@@ -42,9 +42,13 @@ class SelectorPanel(BasePanel):
         self.context.hide_nav_button("next")
 
         if self.on_cancel:
-            self.context.show_nav_button("back", callback=lambda b: self.on_cancel())
+            self.context.show_nav_button("back", callback=self._handle_cancel)
         else:
             self.context.hide_nav_button("back")
+
+    def _handle_cancel(self):
+        if callable(self.on_cancel):
+            self.on_cancel()
 
     def move_selection_up(self):
         if self.selected_index > 0:
