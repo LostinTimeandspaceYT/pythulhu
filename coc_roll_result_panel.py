@@ -6,7 +6,7 @@ from base_panel import BasePanel
 class CthulhuRollResultPanel(BasePanel):
     __slots__ = (
         "game", "result", "roll_params", "on_complete", "threshold", "cost",
-        "selected_index", "last_encoder_position", "mode", "spend_luck", "push",
+        "selected_index", "last_encoder_position", "mode", "roll_mode",
         "confirm_selected", "labels"
     )
     PARAM_KEYS = ["Spend Luck", "Push", "Confirm"]
@@ -20,12 +20,13 @@ class CthulhuRollResultPanel(BasePanel):
 
         self.threshold = CthulhuGame.get_val_at_threshold(params.base_val, params.difficulty)
         self.cost = CthulhuGame.get_luck_cost(self.result, self.threshold)
+        self.passed = self.result.success_level >= CthulhuGame.DIFFICULTY_LEVELS[self.roll_params.difficulty]
+        self.PARAM_KEYS = ["Confirm"] if self.passed else ["Spend Luck", "Push", "Confirm"]
 
         self.selected_index = 0
         self.last_encoder_position = self.hal.get_encoder_position()
         self.mode = "select"
-        self.spend_luck = False
-        self.push = False
+        self.roll_mode = None
         self.confirm_selected = False
         self.labels = []
 
@@ -42,28 +43,36 @@ class CthulhuRollResultPanel(BasePanel):
         self.render_labels()
 
     def render_labels(self):
-        y = 10
         summary_text = self.result.summary()
-        if self.labels[0].text != summary_text:
-            self.labels[0].text = summary_text
-        self.labels[0].color = self.result.stylize(CthulhuGame.DIFFICULTY_LEVELS[self.roll_params.difficulty])
-        self.labels[0].y = y
-        y += 30
+
+        # Optionally add Luck preview
+        if self.roll_mode == 'luck' and self.cost <= self.game.character.current_luck:
+            current = self.game.character.current_luck
+            new_val = current - self.cost
+            summary_text += f"\nLuck: {current} -> {new_val} (Cost: {self.cost})"
+
+        self.labels[0].text = summary_text
+        self.labels[0].color = self.result.stylize(
+            CthulhuGame.DIFFICULTY_LEVELS[self.roll_params.difficulty]
+        )
+        self.labels[0].y = 10
+
+        line_count = summary_text.count('\n') + 1
+        y = 10 + line_count * 25 # Ajust spacing based on line count
 
         options = {
-            "Spend Luck": self.spend_luck,
-            "Push": self.push,
+            "Spend Luck": self.roll_mode == 'luck',
+            "Push": self.roll_mode == 'push',
             "Confirm": self.confirm_selected
         }
 
         self.render_option_labels(
-            labels=self.labels,
+            labels=self.labels[1:],
             start_y=y,
             selected_index=self.selected_index,
             param_keys=self.PARAM_KEYS,
             param_values=options
         )
-
 
     def detach_from(self):
         for label in self.labels:
@@ -84,23 +93,21 @@ class CthulhuRollResultPanel(BasePanel):
         key = self.PARAM_KEYS[self.selected_index]
         if key == "Spend Luck":
             if self.cost < self.game.character.current_luck:
-                self.spend_luck = not self.spend_luck
-                self.push = not self.spend_luck
+                self.roll_mode = 'luck' if self.roll_mode != 'luck' else None
         elif key == "Push":
-            self.push = not self.push
-            self.spend_luck = not self.push
+                self.roll_mode = 'push' if self.roll_mode != 'push' else None
         elif key == "Confirm":
             self.confirm_selected = not self.confirm_selected
 
         self.render_labels()
 
     def finalize_roll(self):
-        if self.spend_luck:
+        if self.roll_mode == 'luck':
             if self.cost <= self.game.character.current_luck:
                 self.game.character.set_luck(self.game.character.current_luck - self.cost)
                 self.result.success_level += 1
                 self.result.outcome += f"\nSpent {self.cost} Luck"
-        elif self.push:
+        elif self.roll_mode == 'push':
             new_roll = self.game.character.roll_skill(self.roll_params.bonus, self.roll_params.penalty)
             self.result = CthulhuGame.evaluate_roll(new_roll, self.roll_params)
             self.result.outcome += "\n(Pushed)"
@@ -108,52 +115,20 @@ class CthulhuRollResultPanel(BasePanel):
         self.on_complete(self.result)
 
     def update(self):
-        super().update()
-
-        pos = self.hal.get_encoder_position()
-        if pos != self.last_encoder_position:
+        super().update()  # handles button press + mode toggle
+        current_position = self.hal.get_encoder_position()
+        if current_position != self.last_encoder_position:
             if self.mode == "select":
-                if pos > self.last_encoder_position:
+                if current_position > self.last_encoder_position:
                     self.move_selection_down()
                 else:
                     self.move_selection_up()
             elif self.mode == "edit":
-                self.modify_selected_param(increment=(pos > self.last_encoder_position))
-            self.last_encoder_position = pos
+                self.modify_selected_param(increment=(current_position > self.last_encoder_position))
+            self.last_encoder_position = current_position
 
-        if self.hal.is_button_pressed():
-            self.modify_selected_param()
-            while self.hal.is_button_pressed():
-                pass
-        
-        if self.confirm_selected:
+        # When we're finally ready to try again
+        if self.mode == "select" and self.confirm_selected:
             self.confirm_selected = False
             self.finalize_roll()
 
-
-    #         luck_cost = CthulhuGame.get_luck_cost(self.result, threshold)
-    #         if luck_cost and luck_cost <= self.game.character.current_luck:
-    #             self.pending_luck_cost = luck_cost
-    #             self.result.outcome += f"\nCan spend {luck_cost} Luck to pass"
-    #             # Wait for user confirmation before proceeding
-
-    # else:
-    #     # if they fumbled, passed, or already pushed.
-    #     if self.result.success_level < 0 or self.pushed == True:
-    #         return
-
-    #     if self.result.success_level >= diff:
-    #         return
-
-    #     push = self.game.character.roll_skill(
-    #         bonus_die=bonus,
-    #         penalty_die=penalty
-    #     )
-    #     self.result = CthulhuGame.evaluate_skill_roll(
-    #         push,
-    #         self.skill_val,
-    #         bonus=bonus,
-    #         penalty=penalty
-    #     )
-    #     self.result.outcome += "\n(Pushed)"
-    #     self.pushed = True
