@@ -1,10 +1,9 @@
 from ui_context import UIContext
 from file_manager import FileManager
-from game_runner import GameRunner
-from panel_pool import PanelPool
-from selector_panel import SelectorPanel
-from coc_game import CthulhuGame
-from coc_character import CthulhuCharacter, PulpCharacter
+from game.game_runner import GameRunner
+from panels.selector_panel import SelectorPanel
+from call_of_cthulhu.coc_game import CthulhuGame
+from call_of_cthulhu.coc_character import CthulhuCharacter, PulpCharacter
 
 class GameFactory:
     GAMES = {"call_of_cthulhu": CthulhuGame, "pulp_cthulhu": CthulhuGame}

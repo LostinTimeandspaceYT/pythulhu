@@ -1,5 +1,5 @@
 import displayio
-from base_panel import BasePanel
+from panels.base_panel import BasePanel
 
 class MenuPanel(BasePanel):
     def __init__(self, context, buttons: list, background_color=0x000000):

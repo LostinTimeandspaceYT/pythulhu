@@ -2,8 +2,8 @@ import gc
 from hardware import HAL
 from touch_ui import TouchManager, LightTouchButton
 from file_manager import FileManager
-from game_factory import GameFactory
-from game_runner import GameRunner
+from game.game_factory import GameFactory
+from game.game_runner import GameRunner
 from ui_context import UIContext
 
 # NOTE: Order is important here!
@@ -23,8 +23,8 @@ context = UIContext(
 gc.collect()
 
 def start_main_menu():
-    from game_factory import GameFactory
-    from game_runner import GameRunner
+    from game.game_factory import GameFactory
+    from game.game_runner import GameRunner
 
     def start_game(runner: GameRunner):
         print("[DEBUG] Game setup complete.")

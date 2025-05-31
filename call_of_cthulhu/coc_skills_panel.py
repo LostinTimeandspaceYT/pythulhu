@@ -1,6 +1,6 @@
 from adafruit_display_shapes.line import Line
-from text_viewport import TextViewport
-from base_panel import BasePanel
+from panels.text_viewport import TextViewport
+from panels.base_panel import BasePanel
 
 class SkillsPanel(BasePanel):
     def __init__(self, game, context, x=10, y=10, width=300, height=160, lines_per_column=7):
@@ -164,7 +164,7 @@ class SkillsPanel(BasePanel):
             self.open_skill_roll_panel(skill_name)
 
     def open_skill_roll_panel(self, skill_name: str):
-        from skill_roll_panel import SkillRollPanel
+        from call_of_cthulhu.coc_skill_roll_panel import SkillRollPanel
         skill_val = self.game.character.get_value_at(skill_name)
 
         def close_panel(_result=None):

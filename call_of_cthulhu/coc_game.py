@@ -1,8 +1,9 @@
-from roll_result import RollResult
-from coc_roll_params import CthulhuRollParams
-from panel_pool import PanelPool
-from skills_panel import SkillsPanel
-from main_menu_panel import MainMenuPanel
+from game.roll_result import RollResult
+from call_of_cthulhu.coc_roll_params import CthulhuRollParams
+from panels.panel_pool import PanelPool
+from call_of_cthulhu.coc_skills_panel import SkillsPanel
+from panels.main_menu_panel import MainMenuPanel
+from call_of_cthulhu.coc_characteristics_panel import CthulhuCharacteristicsPanel
 from touch_ui import LightTouchButton
 
 class CthulhuGame:
@@ -44,14 +45,25 @@ class CthulhuGame:
         panel = MainMenuPanel(context)
 
         # Add game-specific buttons
-        skills_btn = LightTouchButton("skills", 50, 60, 220, 30, "Skills", callback=lambda b: self.open_skills_panel(context))
-        panel.add_button(skills_btn)
+        btns = []
+        skill_btn = LightTouchButton("skills", 50, 60, 220, 30, "Skills", callback=lambda b: self.open_skills_panel(context))
+        btns.append(skill_btn)
+        ch_btn = LightTouchButton("characteristics", 120, 60, 220, 30, "Characteristics", callback=lambda b: self.open_characteristics_panel(context))
+        btns.append(ch_btn)
+        for btn in btns:
+            panel.add_button(btn)
         return panel
 
     def setup_panels(self, context):
         pool = self.get_panel_pool()
         pool.register_factory("main", lambda: self.build_main_menu(context))
         pool.register_factory("skills", lambda: SkillsPanel(self, context))
+        pool.register_factory("characteristics", lambda: CthulhuCharacteristicsPanel(self, context))
+
+    def open_characteristics_panel(self, context):
+        panel = self.get_panel_pool().get("characteristics")
+        context.cache_panel("characteristics", panel)
+        context.transition_to("characteristics")
 
     def open_skills_panel(self, context):
         panel = self.get_panel_pool().get("skills")

@@ -1,4 +1,4 @@
-from dice import Dice
+from game.dice import Dice
 from random import randint
 
 

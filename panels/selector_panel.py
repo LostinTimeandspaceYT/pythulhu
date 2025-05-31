@@ -1,4 +1,4 @@
-from base_panel import BasePanel
+from panels.base_panel import BasePanel
 from adafruit_display_text.label import Label
 import terminalio
 

@@ -1,4 +1,4 @@
-from text_viewport import TextViewport
+from panels.text_viewport import TextViewport
 import displayio
 
 class CharacterSummaryPanel:

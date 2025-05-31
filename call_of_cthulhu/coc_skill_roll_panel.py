@@ -1,9 +1,9 @@
 from adafruit_display_text.label import Label
 import terminalio
-from base_panel import BasePanel
-from coc_game import CthulhuGame
-from coc_roll_params import CthulhuRollParams
-from coc_roll_result_panel import CthulhuRollResultPanel 
+from panels.base_panel import BasePanel
+from call_of_cthulhu.coc_game import CthulhuGame
+from call_of_cthulhu.coc_roll_params import CthulhuRollParams
+from call_of_cthulhu.coc_roll_result_panel import CthulhuRollResultPanel 
 
 
 class SkillRollPanel(BasePanel):

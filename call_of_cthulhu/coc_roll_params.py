@@ -1,4 +1,3 @@
-# TODO: Decide if a base RollParams class is needed.
 
 class CthulhuRollParams:
     def __init__(self, *, name: str, base_val: int, bonus: int=0, penalty: int=0, difficulty: str="Normal"):

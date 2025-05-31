@@ -1,7 +1,7 @@
 from adafruit_display_text.label import Label
 import terminalio
-from coc_game import CthulhuGame
-from base_panel import BasePanel
+from call_of_cthulhu.coc_game import CthulhuGame
+from panels.base_panel import BasePanel
 
 class CthulhuRollResultPanel(BasePanel):
     __slots__ = (

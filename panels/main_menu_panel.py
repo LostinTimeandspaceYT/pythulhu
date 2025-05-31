@@ -1,4 +1,4 @@
-from base_panel import BasePanel
+from panels.base_panel import BasePanel
 from touch_ui import LightTouchButton
 
 class MainMenuPanel(BasePanel):

@@ -1,5 +1,5 @@
-from player_character import PlayerCharacter
-from coc_dice import CthulhuDice
+from game.player_character import PlayerCharacter
+from call_of_cthulhu.coc_dice import CthulhuDice
 
 CHAR = "Characteristics"
 HP = "Hit Points"
