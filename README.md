@@ -12,7 +12,8 @@ This project uses CircuitPython v9.x.x
 - `adafruit_sdcard`
 - `adafruit_seesaw`
 - `adafruit_tsc2007`
-- `adafruit_ili9431`
+- `adafruit_ili9341`
+- `adafruit_imageload`
 - `neopixel`
 
 More to come in the following months:
@@ -24,6 +25,8 @@ Main Board: [Adafruit Metro RP2040](https://www.adafruit.com/product/5786)
 Display: [2.8" TFT Touch Shield](https://www.adafruit.com/product/1651)
 
 Encoder: [I2C Stemma QT Encoder Breakout](https://www.adafruit.com/product/5880)
+
+Stemma-QT to Stemma-QT cable
 
 
 ## Software Architecture
