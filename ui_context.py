@@ -30,6 +30,10 @@ class UIContext:
         for name in list(self.panel_cache.keys()):
             self.release_panel(name)
 
+    def remove_panel(self, name: str):
+        if name in self.panel_cache:
+            del self.panel_cache[name]
+
     def get_panel(self, name: str):
         return self.panel_cache.get(name)
 
