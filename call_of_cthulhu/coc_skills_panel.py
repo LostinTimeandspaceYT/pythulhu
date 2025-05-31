@@ -1,10 +1,12 @@
 from adafruit_display_shapes.line import Line
 from panels.text_viewport import TextViewport
 from panels.base_panel import BasePanel
+from panels.nav_mixin import PanelNavigationMixin
 
-class SkillsPanel(BasePanel):
+class SkillsPanel(BasePanel, PanelNavigationMixin):
     def __init__(self, game, context, x=10, y=10, width=300, height=160, lines_per_column=7):
         super().__init__(context)
+        PanelNavigationMixin.__init__(self)
         self.game = game
         self.lines_per_column = lines_per_column
         self.total_lines_per_page = lines_per_column * 2
@@ -54,33 +56,27 @@ class SkillsPanel(BasePanel):
         self.update_page()
         self.mode = "select"
         self.last_encoder_position = self.hal.get_encoder_position()
-        import gc
-        gc.collect()
-        print("[DEBUG] After attaching SkillsPanel, mem_free:", gc.mem_free())
 
     def detach_from(self):
         self.all_lines = []
         return super().detach_from()
 
+    def format_skill_line(self, name, val, indent=0):
+        mark = " !" if name in self.game.character.skills_to_improve else ""
+        padding = " " * indent
+        return f"{padding}{name}: {val}{mark}"
 
     def get_all_skill_lines(self) -> list[str]:
-        sheet = self.game.character.sheet
-        skills = sheet.get("Skills", {})
+        skills = self.game.character.sheet.get("Skills", {})
         lines = []
 
         for skill, value in skills.items():
-            if isinstance(value, dict) and not isinstance(value.get("Current"), int):
+            if isinstance(value, dict):
                 lines.append(f"{skill}:")
                 for subskill, subval in value.items():
-                    val = subval.get("Current", "-") if isinstance(subval, dict) else subval
-                    key = f"{subskill}"
-                    mark = " !" if key in self.game.character.skills_to_improve else ""
-                    lines.append(f"  {subskill}: {val}{mark}")
+                    lines.append(self.format_skill_line(subskill, subval, indent=1))
             else:
-                val = value.get("Current", "-") if isinstance(value, dict) else value
-                mark = " !" if skill in self.game.character.skills_to_improve else ""
-                lines.append(f"{skill}: {val}{mark}")
-
+                lines.append(self.format_skill_line(skill, value))
         return lines
 
     def refresh_skills(self):
@@ -126,18 +122,11 @@ class SkillsPanel(BasePanel):
         start = self.page * self.total_lines_per_page
         end = min(start + self.total_lines_per_page, len(self.all_lines))
         page_lines = self.all_lines[start:end]
-
         mid = self.lines_per_column
         left = page_lines[:mid]
         right = page_lines[mid:]
-
-        selected_rel = self.selected_index - start
-        if 0 <= selected_rel < self.total_lines_per_page:
-            if selected_rel < mid:
-                left[selected_rel] = "> " + left[selected_rel]
-            else:
-                right[selected_rel - mid] = "> " + right[selected_rel - mid]
-
+        select = self.selected_index - start
+        self.apply_marker(left_lines=left, right_lines=right, selected_index=select)
         self.left_view.set_lines(left)
         self.right_view.set_lines(right)
 
@@ -173,10 +162,8 @@ class SkillsPanel(BasePanel):
 
         self.game.get_panel_pool().release("skills")
         self.hal.clear_display()
-        # Debugging. This panel uses a f***-ton of memory
         import gc
         gc.collect()
-        print("[DEBUG] Released SkillsPanel:", gc.mem_free())
 
         roll_panel = self.context.get_panel("roll")
         if roll_panel:

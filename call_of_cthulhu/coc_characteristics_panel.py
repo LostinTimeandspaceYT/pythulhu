@@ -1,11 +1,12 @@
 from panels.base_panel import BasePanel
 from adafruit_display_text import label
-import terminalio
+from panels.nav_mixin import PanelNavigationMixin
 from panels.text_viewport import TextViewport
 
-class CthulhuCharacteristicsPanel(BasePanel):
+class CthulhuCharacteristicsPanel(BasePanel, PanelNavigationMixin):
     def __init__(self, game, context):
         super().__init__(context)
+        PanelNavigationMixin.__init__(self)
         self.game = game
         self.character = game.character
         self.page_index = 0
@@ -43,47 +44,26 @@ class CthulhuCharacteristicsPanel(BasePanel):
     def detach_from(self):
         return super().detach_from()
 
+    def format_line(self, key):
+        val = self.get_value(key)
+        hard = "-"
+        extreme = "-"
+        if isinstance(val, int):
+            vals = self.game.get_diff_level_thresholds(val)
+            hard = vals["Hard"]
+            extreme = vals["Extreme"]
+        return f"{key:<4} {val:>3} ({hard}/{extreme})"
+
     def render(self):
         page_lines = self.options[0] + self.options[1]
-        total_lines = len(page_lines)
         mid = len(self.options[0])
         left_keys = page_lines[:mid]
         right_keys = page_lines[mid:]
-        left_lines = []
-        right_lines = []
-
-        for i, key in enumerate(left_keys):
-            val = self.get_value(key)
-            if isinstance(val, int):
-                vals = self.game.get_diff_level_thresholds(val)
-                hard = vals["Hard"]
-                extreme = vals["Extreme"]
-            else:
-                hard = extreme = "-"
-            text = f"{key:<4} {val:>3} ({hard}/{extreme})"
-            left_lines.append(text)
-
-        for i, key in enumerate(right_keys):
-            val = self.get_value(key)
-            if isinstance(val, int):
-                vals = self.game.get_diff_level_thresholds(val)
-                hard = vals["Hard"]
-                extreme = vals["Extreme"]
-            else:
-                hard = extreme = "-"
-            text = f"{key:<4} {val:>3} ({hard}/{extreme})"
-            right_lines.append(text)
-
-        selected = self.selected_index
-        if selected  < mid:
-            left_lines[selected] = "> " + left_lines[selected]
-        else:
-            right_lines[selected - mid] = "> " + right_lines[selected - mid]
-
-
+        left_lines = [self.format_line(key) for key in left_keys]
+        right_lines = [self.format_line(key) for key in right_keys]
+        self.apply_marker(left_lines=left_lines, right_lines=right_lines, selected_index=self.selected_index)
         self.left_view.set_lines(left_lines)
         self.right_view.set_lines(right_lines)
-
 
     def get_value(self, key):
         val = None
@@ -97,9 +77,12 @@ class CthulhuCharacteristicsPanel(BasePanel):
     def update(self):
         current_position = self.hal.get_encoder_position()
         if current_position < self.last_encoder_position:
-            self.move_selection_up()
+            if self.move_selection_up(self.options):
+                self.render()
+
         elif current_position > self.last_encoder_position:
-            self.move_selection_down()
+            if self.move_selection_down(self.options):
+                self.render()
         self.last_encoder_position = current_position
 
         if self.hal.is_button_pressed():
@@ -109,16 +92,16 @@ class CthulhuCharacteristicsPanel(BasePanel):
         else:
             self.awaiting_release = False
 
-    def move_selection_up(self):
-        if self.selected_index > 0:
-            self.selected_index -= 1
-            self.render()
+    # def move_selection_up(self):
+    #     if self.selected_index > 0:
+    #         self.selected_index -= 1
+    #         self.render()
 
-    def move_selection_down(self):
-        total_lines = len(self.options[0]) + len(self.options[1])
-        if self.selected_index < total_lines - 1:
-            self.selected_index += 1
-            self.render()
+    # def move_selection_down(self):
+    #     total_lines = len(self.options[0]) + len(self.options[1])
+    #     if self.selected_index < total_lines - 1:
+    #         self.selected_index += 1
+    #         self.render()
 
     def next_page(self):
         if self.page_index < len(self.options) - 1:
