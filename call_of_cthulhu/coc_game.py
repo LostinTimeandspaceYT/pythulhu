@@ -1,9 +1,10 @@
 from game.roll_result import RollResult
 from call_of_cthulhu.coc_roll_params import CthulhuRollParams
 from panels.panel_pool import PanelPool
-from call_of_cthulhu.coc_skills_panel import SkillsPanel
+from call_of_cthulhu.coc_skills_panel import CthulhuSkillsPanel
 from panels.main_menu_panel import MainMenuPanel
 from call_of_cthulhu.coc_characteristics_panel import CthulhuCharacteristicsPanel
+from call_of_cthulhu.coc_stats_panel import CthulhuStatsPanel
 from touch_ui import LightTouchButton
 
 class CthulhuGame:
@@ -45,20 +46,20 @@ class CthulhuGame:
         panel = MainMenuPanel(context)
 
         # Add game-specific buttons
-        btns = []
-        skill_btn = LightTouchButton("skills", 50, 60, 220, 30, "Skills", callback=lambda b: self.open_skills_panel(context))
-        btns.append(skill_btn)
-        ch_btn = LightTouchButton("characteristics", 120, 60, 220, 30, "Characteristics", callback=lambda b: self.open_characteristics_panel(context))
-        btns.append(ch_btn)
-        for btn in btns:
-            panel.add_button(btn)
+        buttons = [
+            LightTouchButton("skills", 50, 60, 220, 30, "Skills", callback=lambda b: self.open_skills_panel(context)),
+            LightTouchButton("characteristics", 120, 60, 220, 30, "Characteristics", callback=lambda b: self.open_characteristics_panel(context)),
+            LightTouchButton("stats", 120, 120, 220, 30, "Stats", callback=lambda b: self.open_stats_panel(context)),
+        ]
+        panel.add_buttons(buttons)
         return panel
 
     def setup_panels(self, context):
         pool = self.get_panel_pool()
         pool.register_factory("main", lambda: self.build_main_menu(context))
-        pool.register_factory("skills", lambda: SkillsPanel(self, context))
+        pool.register_factory("skills", lambda: CthulhuSkillsPanel(self, context))
         pool.register_factory("characteristics", lambda: CthulhuCharacteristicsPanel(self, context))
+        pool.register_factory("stats", lambda: CthulhuStatsPanel(self, context))
 
     def open_characteristics_panel(self, context):
         panel = self.get_panel_pool().get("characteristics")
@@ -69,6 +70,11 @@ class CthulhuGame:
         panel = self.get_panel_pool().get("skills")
         context.cache_panel("skills", panel)
         context.transition_to("skills")
+
+    def open_stats_panel(self, context):
+        panel = self.get_panel_pool().get("stats")
+        context.cache_panel("stats", panel)
+        context.transition_to("stats")
 
     @classmethod
     def get_diff_level_thresholds(cls, val: int) -> dict:
@@ -86,7 +92,6 @@ class CthulhuGame:
     def is_success(cls, result: RollResult, params: CthulhuRollParams):
         return result.success_level >= cls.DIFFICULTY_LEVELS[params.difficulty]
 
-    # TODO: TEST
     @classmethod
     def evaluate_roll(cls, roll, params: CthulhuRollParams) -> RollResult:
         thresholds = cls.get_diff_level_thresholds(params.base_val)
