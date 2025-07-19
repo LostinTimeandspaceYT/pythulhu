@@ -12,20 +12,20 @@ class CthulhuCharacteristicsPanel(BasePanel, PanelNavigationMixin):
         self.page_index = 0
         self.selected_index = 0
         self.options = [
-            ["STR", "CON", "SIZ", "DEX", "APP",], ["INT", "POW", "EDU", "Luck"]
+            ["STR", "CON", "SIZ", "DEX", "APP",], ["INT", "POW", "EDU", "Luck", "Sanity"]
         ]
         self.last_encoder_position = self.hal.get_encoder_position()
         self.awaiting_release = False
         self.left_view = TextViewport(
             x=10, y=10,
             width=140, height=200,
-            max_lines=5, line_height=22,
+            max_lines=len(self.options[0]), line_height=22,
             show_background=False
         )
         self.right_view = TextViewport(
             x=160, y=10,
             width=140, height=200,
-            max_lines=4, line_height=22,
+            max_lines=len(self.options[1]), line_height=22,
             show_background=False
         )
         self.group.append(self.left_view.group)
@@ -67,10 +67,12 @@ class CthulhuCharacteristicsPanel(BasePanel, PanelNavigationMixin):
 
     def get_value(self, key):
         val = None
-        if key in self.character.characteristics:
-            val = self.character.characteristics[key]
+        if key == "Sanity":
+            val = self.character.current_sanity
         elif key == "Luck":
             val = self.character.current_luck
+        else:
+            val = self.character.characteristics[key]
 
         return val if val is not None else 0
 
@@ -91,17 +93,6 @@ class CthulhuCharacteristicsPanel(BasePanel, PanelNavigationMixin):
                 self.awaiting_release = True
         else:
             self.awaiting_release = False
-
-    # def move_selection_up(self):
-    #     if self.selected_index > 0:
-    #         self.selected_index -= 1
-    #         self.render()
-
-    # def move_selection_down(self):
-    #     total_lines = len(self.options[0]) + len(self.options[1])
-    #     if self.selected_index < total_lines - 1:
-    #         self.selected_index += 1
-    #         self.render()
 
     def next_page(self):
         if self.page_index < len(self.options) - 1:
