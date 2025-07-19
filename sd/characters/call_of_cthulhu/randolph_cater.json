@@ -31,11 +31,11 @@
             "Maximum": 0,
             "Temporary Insanity": false,
             "Indefinite Insanity": false
-        }
+        },
+        "Major Wound": false,
+        "Unconscious": false,
+        "Dying": false
     },
-    "Major Wound": false,
-    "Unconscious": false,
-    "Dying": false,
     "Skills": {
         "Accounting": 5,
         "Appraise": 5,

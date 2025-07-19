@@ -31,11 +31,11 @@
       "Maximum": 53,
       "Temporary Insanity": false,
       "Indefinite Insanity": false
-    }
+    },
+    "Major Wound": false,
+    "Unconscious": false,
+    "Dying": false
   },
-  "Major Wound": false,
-  "Unconscious": false,
-  "Dying": false,
   "Pulp Talents": {
     "Sharp Witted": "Gain a bonus die on INT (not Idea) rolls",
     "Shadow": "Reduce diff by 1 or gain a bonus die on Stealth rolls"
