@@ -3,7 +3,7 @@ from panels.text_viewport import TextViewport
 from panels.base_panel import BasePanel
 from panels.nav_mixin import PanelNavigationMixin
 
-class SkillsPanel(BasePanel, PanelNavigationMixin):
+class CthulhuSkillsPanel(BasePanel, PanelNavigationMixin):
     def __init__(self, game, context, x=10, y=10, width=300, height=160, lines_per_column=7):
         super().__init__(context)
         PanelNavigationMixin.__init__(self)
