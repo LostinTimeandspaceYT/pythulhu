@@ -36,9 +36,6 @@ class HAL:
     """
     The HAL acts as the primary interface between a game's logic and the hardware.
     This isn't a HAL in the traditional sense, but serves a similar purpose here.
-
-    TODO: Decide how games should display stuff.
-    TODO: Add touch screen interface.
     """
     seesaw = None
     display = None
@@ -49,9 +46,14 @@ class HAL:
     board_pixel = None
     tsc = None
     irq_dio = None
+    is_init = False
 
     @classmethod
     def init(cls):
+        if cls.is_init is True:
+            return
+        
+        cls.is_init = True
         cls.seesaw = seesaw.Seesaw(board.STEMMA_I2C(), addr=0x36)
         seesaw_product = (cls.seesaw.get_version() >> 16) & 0xFFFF
         if DEBUG:
@@ -177,16 +179,16 @@ class HAL:
 
     @classmethod
     def fill_pixel(cls, color: int) -> None:
-        cls.pixel.fill(colorwheel(color))
+        cls.pixel.fill(color)
 
     @classmethod
     def fill_metro_pixel(cls, color: int) -> None:
-        cls.board_pixel.fill(colorwheel(color))
+        cls.board_pixel.fill(color)
 
     @classmethod
     def fill_all_pixels(cls, color: int) -> None:
-        cls.pixel.fill(colorwheel(color))
-        cls.board_pixel.fill(colorwheel(color))
+        cls.pixel.fill(color)
+        cls.board_pixel.fill(color)
 
     @classmethod
     def increase_all_pixel_brightness(cls) -> None:
