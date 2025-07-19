@@ -2,6 +2,7 @@ from adafruit_display_text.label import Label
 import terminalio
 from call_of_cthulhu.coc_game import CthulhuGame
 from panels.base_panel import BasePanel
+from hardware import HAL
 
 class CthulhuRollResultPanel(BasePanel):
     __slots__ = (
@@ -52,10 +53,13 @@ class CthulhuRollResultPanel(BasePanel):
             summary_text += f"\nLuck: {current} -> {new_val} (Cost: {self.cost})"
 
         self.labels[0].text = summary_text
-        self.labels[0].color = self.result.stylize(
+
+        self.labels[0].y = 10
+        color = self.result.stylize(
             CthulhuGame.DIFFICULTY_LEVELS[self.roll_params.difficulty]
         )
-        self.labels[0].y = 10
+        self.labels[0].color = color
+        HAL.fill_all_pixels(color)
 
         line_count = summary_text.count('\n') + 1
         y = 10 + line_count * 25 # Ajust spacing based on line count
@@ -75,6 +79,7 @@ class CthulhuRollResultPanel(BasePanel):
         )
 
     def detach_from(self):
+        HAL.fill_all_pixels(0)
         for label in self.labels:
             label.text = ""
         return super().detach_from()
