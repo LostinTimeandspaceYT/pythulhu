@@ -1,10 +1,23 @@
 # Pythulhu
 
-*An electronic dice roller and character sheet interface for Call of Cthulhu and Pulp Cthulhu 7th edition*
+Electronic dice roller and character sheet interface for TTRPGs.
 
-This project uses CircuitPython v9.x.x
+## Features
+
+- Support for multiple game systems
+- Save and load files via a micro-SD card
+- Boasts a "Large" 2.8 inch display with touch controls
+- Rotary Encoder with push button
+
+## Games Supported
+
+- Call of Cthulhu 7th edition (Weapon Damage & Sanity rules missing as of Jul 20, 2025)
+  - Pulp Cthulhu
+- ~~Cyberpunk Red~~ (After CoC is complete)
 
 ## Libraries & Dependencies
+
+This project uses CircuitPython v9.x.x
 
 - `adafruit_button`
 - `adafruit_display_text`
@@ -16,47 +29,128 @@ This project uses CircuitPython v9.x.x
 - `adafruit_imageload`
 - `neopixel`
 
-More to come in the following months:
-
 ## Hardware Used
 
-Main Board: [Adafruit Metro RP2040](https://www.adafruit.com/product/5786)
+[Adafruit Metro RP2350 with PSRAM](https://www.adafruit.com/product/6267)
+Upgrade from original RP2040 edition. PSRAM is optional, but can decrease load
+times if working with large images.
 
-Display: [2.8" TFT Touch Shield](https://www.adafruit.com/product/1651)
+[2.8" TFT Touch Shield](https://www.adafruit.com/product/1651)
+Capactive touch screen is also an option, though it is not currently supported
 
-Encoder: [I2C Stemma QT Encoder Breakout](https://www.adafruit.com/product/5880)
+[I2C Stemma QT Encoder Breakout](https://www.adafruit.com/product/5880)
+For fine-grained user controls.
 
-Stemma-QT to Stemma-QT cable
+[Stemma-QT to Stemma-QT cable:](https://www.adafruit.com/product/4399):
+Connects the encoder to the main board.
+
+## Putting it together
+
+### Hardware Setup
+
+1. Connect the TFT Touch Shield to the Metro, ensuring all the pins are fully seated
+
+> [!caution]
+> Be careful to align the back 6 GPIO pins during installation
+
+2. Connect one end of the Stemma-QT cable to one of the connectors on the encoder.
+Doesn't matter which one you choose.
+
+> [!note] Additional Encoders
+> Adventerous developers could add support for additional Encoders.
+
+3. Connect the other end of the Stemma-QT cable to the connector on the Metro.
+
+> [!note]
+> This is near the USB-C connector and reset button.
+
+4. Follow the SD Card set up below. Once complete insert the SD card into the slot on the Metro.
+
+### SD Card set up
+
+> [!todo] Create ZIP
+> Package dependencies in future release
+
+- clone the repo
+- install circuit python version 9.x.x onto Metro
+- copy dependencies to Metro (see above)
+- copy contents of repo (images are optional) to Metro
 
 
 ## Software Architecture
 
-[ FileManager ]         -- handles file IO (JSON, images)
+### Hardware related
 
-↓
-     
-[ UIContext ]           -- manages display, touch input, LEDs, and encoder
+**HAL:**
+Hardware Abstraction Layer.
 
-↓
-     
-[ GameFactory ]         -- lets user pick game + character
+**FileManager:**
+Handles file IO (JSON, BMPs).
+Characters and images are considered `assets` and the follow a known file structure.
 
-↓
-     
-[ GameRunner ]          -- runs one game, manages UIContext + main loop
+**UIContext:**
+Handles UI display buffers with panel caching
 
-↓
-     
-[ Game (e.g. CthulhuGame) ] -- owns PanelPool, game logic, roll logic
+**TouchManager:**
+Handles touch controls needed for `TouchButton` classes
 
-↓
-     
-[ PanelPool ]           -- game-specific panel reuse
+### Game Logic
 
-## Chaosium's Fan Material Policy  
+**GameFactory:**
+Lets users pick the game + character they want to play.
+Developers can register new games into the following dict:
+
+```py
+GAMES = {
+    "call_of_cthulhu": CthulhuGame,
+    "pulp_cthulhu": CthulhuGame,
+  # "your_game_here": MyGame,
+}
+```
+
+**GameRunner:**
+runs game event loop
+
+**Game (e.g. CthulhuGame):**
+Owns `PanelPool`, game logic, and interprets dice roll logic.
+
+**Dice:**
+Rolls dice. Dice are tuples `(num_dice, num_sides)`.
+This conforms to the typical `1d20`, `4d6` nomenclature TTRPGs use.
+Games can extend this class to add functionality tailored for their needs.
+
+See `CthulhuGame` for examples
+
+**RollResult:**
+A monad-like wrapper for games to display roll results.
+`stylize()` can be used to color text or change pixel colors.
+
+### UI Elements
+
+**PanelPool:**
+Game-specific panels, registered to the `UIContext`.
+Panels can regiser factory functions to the pool for dynamic dispatch
+
+**BasePanel:**
+Provides basic functionality to panels such as a user selection mode via the encoder.
+By pushing the button on the encoder, the user can enter either `select` or `edit` mode.
+
+- select: `>`
+- edit: `*`
+
+**PanelNavigationMixin:**
+Provides Navigiation support via the encoder wheel.
+By rotating the wheel, users can traverse lists of options, such as a PCs skills.
+Also provides helper method for splitting long lists into two columns.
+
+Other example panels are provided in `panels/`.
+
+## Additional Information
+
+### Chaosium's Fan Material Policy  
 
 “This application uses trademarks and/or copyrights owned by Chaosium Inc/Moon Design Publications LLC, which are used under Chaosium Inc’s Fan Material Policy.
 We are expressly prohibited from charging you to use or access this content. This application is not published, endorsed, or specifically approved by Chaosium Inc.
-For more information about Chaosium Inc’s products, please visit [www.chaosium.com].”
+For more information about Chaosium Inc’s products, please visit [www.chaosium.com](www.chaosium.com).”
 
-[Link:](https://www.chaosium.com/fan-material-policy/)
+[Link](https://www.chaosium.com/fan-material-policy/)
