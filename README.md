@@ -56,7 +56,7 @@ Connects the encoder to the main board.
 2. Connect one end of the Stemma-QT cable to one of the connectors on the encoder.
 Doesn't matter which one you choose.
 
-> [!note] Additional Encoders
+> [!note]
 > Adventerous developers could add support for additional Encoders.
 
 3. Connect the other end of the Stemma-QT cable to the connector on the Metro.
@@ -68,7 +68,7 @@ Doesn't matter which one you choose.
 
 ### SD Card set up
 
-> [!todo] Create ZIP
+> [!todo]  
 > Package dependencies in future release
 
 - clone the repo
