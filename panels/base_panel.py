@@ -1,9 +1,10 @@
 import displayio
 from ui_context import UIContext
 
+
 class BasePanel:
     def __init__(self, context: UIContext):
-        self.context = context # Used in child classes
+        self.context = context  # Used in child classes
         self.hal = context.hal
         self.group = displayio.Group()
         self.mode = "select"  # or "edit"
@@ -29,7 +30,14 @@ class BasePanel:
     def toggle_mode(self):
         self.mode = "edit" if self.mode == "select" else "select"
 
-    def render_option_labels(self, labels, start_y: int, selected_index: int, param_keys: list[str], param_values: dict[str, any]):
+    def render_option_labels(
+        self,
+        labels,
+        start_y: int,
+        selected_index: int,
+        param_keys: list[str],
+        param_values: dict[str, any],
+    ):
         y = start_y
         for i, key in enumerate(param_keys):
             if self.mode == "select":
@@ -56,4 +64,3 @@ class BasePanel:
                 self.awaiting_release = True
         else:
             self.awaiting_release = False
-
