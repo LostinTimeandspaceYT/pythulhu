@@ -5,6 +5,7 @@ from call_of_cthulhu.coc_skills_panel import CthulhuSkillsPanel
 from panels.main_menu_panel import MainMenuPanel
 from call_of_cthulhu.coc_characteristics_panel import CthulhuCharacteristicsPanel
 from call_of_cthulhu.coc_stats_panel import CthulhuStatsPanel
+from call_of_cthulhu.coc_equipment_panel import CthulhuEquipmentPanel
 from touch_ui import LightTouchButton
 
 BUTTON_WIDTH = 220
@@ -17,11 +18,6 @@ BUTTON_RIGHT = 120
 class CthulhuGame:
     _instance = None
 
-    DIFFICULTY_LEVELS = {
-        "Normal": 1,
-        "Hard": 2,
-        "Extreme": 3
-    }
     DIFFICULTY_LEVELS = {"Normal": 1, "Hard": 2, "Extreme": 3}
 
     SUCCESS_LEVELS = {
@@ -134,6 +130,11 @@ class CthulhuGame:
         panel = self.get_panel_pool().get("stats")
         context.cache_panel("stats", panel)
         context.transition_to("stats")
+
+    def open_equipment_panel(self, context):
+        panel = self.get_panel_pool().get("equipment")
+        context.cache_panel("equipment", panel)
+        context.transition_to("equipment")
 
     @classmethod
     def get_diff_level_thresholds(cls, val: int) -> dict:
