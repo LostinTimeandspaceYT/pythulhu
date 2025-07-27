@@ -8,7 +8,6 @@ SAN = "Sanity"
 
 
 class CthulhuCharacter(PlayerCharacter):
-
     def __init__(self, fpath: str):
         super().__init__(fpath)
         self.prev_skill_modifier: int = 0  # used when pushing rolls.
@@ -20,6 +19,20 @@ class CthulhuCharacter(PlayerCharacter):
 
     def str_plus_siz(self) -> int:
         return self.characteristics["STR"] + self.characteristics["SIZ"]
+
+    def get_build(self) -> int:
+        """Pg 33 of the Keeper's Handbook"""
+        val = self.str_plus_siz()
+        if val <= 64:
+            return -2
+        elif 65 <= val <= 84:
+            return -1
+        elif 85 <= val <= 124:
+            return 0
+        elif 125 <= val <= 164:
+            return 2
+        else:
+            return 2
 
     def damage_bonus(self) -> tuple:
         """Returns a tuple (num_dice, num_side) such that -2 and -1 are const"""
@@ -130,8 +143,12 @@ class CthulhuCharacter(PlayerCharacter):
         return self.damage_bonus()
 
     @property
+    def build(self):
+        return self.get_build()
+
+    @property
     def weapons(self):
-        return self.sheet["Combat"]["Weapons"]
+        return self.sheet["Weapons"]
 
     @property
     def current_sanity(self):
@@ -151,7 +168,6 @@ class CthulhuCharacter(PlayerCharacter):
 
 
 class PulpCharacter(CthulhuCharacter):
-
     def __init__(self, fpath: str):
         super().__init__(fpath)
 

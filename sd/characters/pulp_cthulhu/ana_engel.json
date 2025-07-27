@@ -105,27 +105,22 @@
       "Specialty 3": 0
     }
   },
-  "Combat": {
-    "Build": 0,
-    "Damage Bonus": "",
-    "Move": 0,
-    "Weapons": {
-      "Weapon 1": {
-        "Name": "Brawl",
-        "Damage ": "1d3 + db",
-        "num of attacks": 1,
-        "Range": "",
-        "Ammo": null,
-        "Malf": null
-      },
-      "Weapon 2": {
-        "Name": ".25 Derringer",
-        "Damage ": "1d6",
-        "num of attacks": 1,
-        "Range": "3 yards",
-        "Ammo": 6,
-        "Malf": "100"
-      }
+  "Weapons": {
+    "Weapon 1": {
+      "Name": "Brawl",
+      "Damage ": "1d3 + db",
+      "num of attacks": 1,
+      "Range": "",
+      "Ammo": null,
+      "Malf": null
+    },
+    "Weapon 2": {
+      "Name": ".25 Derringer",
+      "Damage ": "1d6",
+      "num of attacks": 1,
+      "Range": "3 yards",
+      "Ammo": 6,
+      "Malf": "100"
     }
   },
   "Phobias": {
