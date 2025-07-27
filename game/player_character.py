@@ -1,5 +1,5 @@
 """
-Module for Character sheet manipulation 
+Module for Character sheet manipulation
 """
 
 __author__ = "Nathan Winslow"
@@ -9,11 +9,12 @@ from json_parser import JSONParser
 
 
 class PlayerCharacter:
-    """Base class that provides a simple interface to 
+    """Base class that provides a simple interface to
     getting and setting values in a PC's character sheet.
     """
 
     def __init__(self, fpath: str):
+        self._fpath = fpath
         self._sheet = JSONParser.load_json_file(fpath)
 
     def get_value_at(self, key: str) -> any:
@@ -23,7 +24,7 @@ class PlayerCharacter:
         same key.
 
         Args:
-            key (str): key you want the value of. 
+            key (str): key you want the value of.
 
         Returns:
             any: value at key if it exists, None otherwise
@@ -43,8 +44,8 @@ class PlayerCharacter:
         return JSONParser.get_keys(d)
 
     def get_sections(self) -> list[str]:
-            """Returns a list of top-level dictionary keys in the character sheet."""
-            return [k for k, v in self._sheet.items() if isinstance(v, dict)]
+        """Returns a list of top-level dictionary keys in the character sheet."""
+        return [k for k, v in self._sheet.items() if isinstance(v, dict)]
 
     def get_section_lines(self, section: str) -> list[str]:
         """Returns a formatted list of lines for a given section name."""
@@ -55,32 +56,48 @@ class PlayerCharacter:
         return JSONParser.get_keys(section_data)
 
     def render_summary_lines(self, max_lines=15) -> list[str]:
-            """Returns a list of displayable summary lines for the character sheet."""
-            lines = [
-                f"Name: {self.name}",
-                f"Age: {self.age}",
-            ]
+        """Returns a list of displayable summary lines for the character sheet."""
+        lines = [
+            f"Name: {self.name}",
+            f"Age: {self.age}",
+        ]
 
-            pronoun = self._sheet.get("Pronoun")
-            if pronoun:
-                lines.append(f"Pronoun: {pronoun}")
+        pronoun = self._sheet.get("Pronoun")
+        if pronoun:
+            lines.append(f"Pronoun: {pronoun}")
 
-            if "Characteristics" in self._sheet:
-                char = self._sheet["Characteristics"]
-                lines += [
-                    "",
-                    "Characteristics:"
-                ]
-                for stat, val in char.items():
-                    if isinstance(val, dict):
-                        lines.append(f"  {stat}: {val.get('Current','-')}/{val.get('Maximum','-')}")
-                    else:
-                        lines.append(f"  {stat}: {val}")
+        if "Characteristics" in self._sheet:
+            char = self._sheet["Characteristics"]
+            lines += ["", "Characteristics:"]
+            for stat, val in char.items():
+                if isinstance(val, dict):
+                    lines.append(
+                        f"  {stat}: {val.get('Current','-')}/{val.get('Maximum','-')}"
+                    )
+                else:
+                    lines.append(f"  {stat}: {val}")
 
-            if len(lines) > max_lines:
-                return lines[:max_lines - 1] + ["(... more ...)"]
+        if len(lines) > max_lines:
+            return lines[: max_lines - 1] + ["(... more ...)"]
 
-            return lines
+        return lines
+
+    def _create_backup(self, bak_path):
+        with open(self._fpath, "r") as src, open(bak_path, "w") as dst:
+            for line in src:
+                dst.write(line)
+
+    def save(self):
+        bak = self._fpath + ".bak"
+        try:
+            self._create_backup(bak)
+        except OSError:
+            print("Warning: Could not create backup file")
+
+        import json
+
+        with open(self._fpath, "w") as f:
+            json.dump(self._sheet, f)
 
     @property
     def sheet(self):

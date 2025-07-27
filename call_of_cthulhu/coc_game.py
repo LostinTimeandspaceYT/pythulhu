@@ -7,6 +7,13 @@ from call_of_cthulhu.coc_characteristics_panel import CthulhuCharacteristicsPane
 from call_of_cthulhu.coc_stats_panel import CthulhuStatsPanel
 from touch_ui import LightTouchButton
 
+BUTTON_WIDTH = 220
+BUTTON_HEIGHT = 30
+BUTTON_LEFT = 25
+BUTTON_CENTER = 80
+BUTTON_RIGHT = 120
+
+
 class CthulhuGame:
     _instance = None
 
@@ -15,6 +22,7 @@ class CthulhuGame:
         "Hard": 2,
         "Extreme": 3
     }
+    DIFFICULTY_LEVELS = {"Normal": 1, "Hard": 2, "Extreme": 3}
 
     SUCCESS_LEVELS = {
         "Fumble": -1,
@@ -22,7 +30,7 @@ class CthulhuGame:
         "Normal": 1,
         "Hard": 2,
         "Extreme": 3,
-        "Critical": 4
+        "Critical": 4,
     }
 
     # Singleton in Python
@@ -47,9 +55,52 @@ class CthulhuGame:
 
         # Add game-specific buttons
         buttons = [
-            LightTouchButton("skills", 50, 60, 220, 30, "Skills", callback=lambda b: self.open_skills_panel(context)),
-            LightTouchButton("characteristics", 120, 60, 220, 30, "Characteristics", callback=lambda b: self.open_characteristics_panel(context)),
-            LightTouchButton("stats", 120, 120, 220, 30, "Stats", callback=lambda b: self.open_stats_panel(context)),
+            LightTouchButton(
+                "skills",
+                BUTTON_LEFT,
+                BUTTON_HEIGHT,
+                BUTTON_WIDTH,
+                BUTTON_HEIGHT,
+                "Skills",
+                callback=lambda b: self.open_skills_panel(context),
+            ),
+            LightTouchButton(
+                "characteristics",
+                BUTTON_RIGHT,
+                BUTTON_HEIGHT,
+                BUTTON_WIDTH,
+                BUTTON_HEIGHT,
+                "Characteristics",
+                callback=lambda b: self.open_characteristics_panel(context),
+            ),
+            LightTouchButton(
+                "stats",
+                BUTTON_LEFT,
+                BUTTON_CENTER,
+                BUTTON_WIDTH,
+                BUTTON_HEIGHT,
+                "Stats",
+                callback=lambda b: self.open_stats_panel(context),
+            ),
+            LightTouchButton(
+                "equipment",
+                BUTTON_RIGHT,
+                BUTTON_CENTER,
+                BUTTON_WIDTH,
+                BUTTON_HEIGHT,
+                "Equipment",
+                callback=self.open_equipment_panel(context),
+            ),
+            LightTouchButton(
+                "exit",
+                BUTTON_LEFT,
+                BUTTON_RIGHT,
+                BUTTON_WIDTH,
+                BUTTON_HEIGHT,
+                "Save & Exit",
+                callback=lambda b: self.save_and_exit(context),
+            ),
+            # LightTouchButton("equipment", 120, 120, 220, 30, "Equipment", callback=self.open_equipment_panel(context)),
         ]
         panel.add_buttons(buttons)
         return panel
@@ -58,8 +109,16 @@ class CthulhuGame:
         pool = self.get_panel_pool()
         pool.register_factory("main", lambda: self.build_main_menu(context))
         pool.register_factory("skills", lambda: CthulhuSkillsPanel(self, context))
-        pool.register_factory("characteristics", lambda: CthulhuCharacteristicsPanel(self, context))
+        pool.register_factory(
+            "characteristics", lambda: CthulhuCharacteristicsPanel(self, context)
+        )
         pool.register_factory("stats", lambda: CthulhuStatsPanel(self, context))
+        pool.register_factory("equipment", lambda: CthulhuEquipmentPanel(self, context))
+
+    def save_and_exit(self, context):
+        if self.character:
+            self.character.save()
+        context.should_exit = True
 
     def open_characteristics_panel(self, context):
         panel = self.get_panel_pool().get("characteristics")
@@ -78,14 +137,10 @@ class CthulhuGame:
 
     @classmethod
     def get_diff_level_thresholds(cls, val: int) -> dict:
-        return {
-            "Normal": int(val),
-            "Hard": int(val * 0.5),
-            "Extreme": int(val * 0.2)
-        }
+        return {"Normal": int(val), "Hard": int(val * 0.5), "Extreme": int(val * 0.2)}
 
     @classmethod
-    def get_val_at_threshold(cls, val: int, difficulty: str="Normal") -> int:
+    def get_val_at_threshold(cls, val: int, difficulty: str = "Normal") -> int:
         return cls.get_diff_level_thresholds(val)[difficulty]
 
     @classmethod
