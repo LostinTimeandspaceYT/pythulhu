@@ -104,7 +104,6 @@
     "Combat": {
         "Build" : 0,
         "Damage Bonus": "",
-        "Dodge": 0,
         "Move" : 0,
         "Weapons" : {
             "Weapon 1" : {
