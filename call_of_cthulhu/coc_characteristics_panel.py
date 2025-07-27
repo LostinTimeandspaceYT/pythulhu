@@ -20,7 +20,7 @@ class CthulhuCharacteristicsPanel(BasePanel, PanelNavigationMixin):
                 "DEX",
                 "APP",
             ],
-            ["INT", "POW", "EDU", "Luck", "Sanity"],
+            ["INT", "POW", "EDU", "Luck",],
         ]
         self.last_encoder_position = self.hal.get_encoder_position()
         self.awaiting_release = False
@@ -87,9 +87,7 @@ class CthulhuCharacteristicsPanel(BasePanel, PanelNavigationMixin):
 
     def get_value(self, key):
         val = None
-        if key == "Sanity":
-            val = self.character.current_sanity
-        elif key == "Luck":
+        if key == "Luck":
             val = self.character.current_luck
         else:
             val = self.character.characteristics[key]

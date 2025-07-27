@@ -1,8 +1,6 @@
 from adafruit_display_text.label import Label
 import terminalio
-from call_of_cthulhu.coc_game import CthulhuGame
 from panels.base_panel import BasePanel
-from hardware import HAL
 
 
 class CthulhuRollResultPanel(BasePanel):
@@ -29,13 +27,13 @@ class CthulhuRollResultPanel(BasePanel):
         self.roll_params = params
         self.on_complete = on_complete
 
-        self.threshold = CthulhuGame.get_val_at_threshold(
+        self.threshold = self.game.get_val_at_threshold(
             params.base_val, params.difficulty
         )
-        self.cost = CthulhuGame.get_luck_cost(self.result, self.threshold) or 100
+        self.cost = self.game.get_luck_cost(self.result, self.threshold) or 100
         self.passed = (
             self.result.success_level
-            >= CthulhuGame.DIFFICULTY_LEVELS[self.roll_params.difficulty]
+            >= self.game.DIFFICULTY_LEVELS[self.roll_params.difficulty]
         )
         self.PARAM_KEYS = (
             ["Confirm"] if self.passed else ["Spend Luck", "Push", "Confirm"]
@@ -73,10 +71,10 @@ class CthulhuRollResultPanel(BasePanel):
 
         self.labels[0].y = 10
         color = self.result.stylize(
-            CthulhuGame.DIFFICULTY_LEVELS[self.roll_params.difficulty]
+            self.game.DIFFICULTY_LEVELS[self.roll_params.difficulty]
         )
         self.labels[0].color = color
-        HAL.fill_all_pixels(color)
+        self.hal.fill_all_pixels(color)
 
         line_count = summary_text.count("\n") + 1
         y = 10 + line_count * 25  # Ajust spacing based on line count
@@ -96,7 +94,7 @@ class CthulhuRollResultPanel(BasePanel):
         )
 
     def detach_from(self):
-        HAL.fill_all_pixels(0)
+        self.hal.fill_all_pixels(0)
         for label in self.labels:
             label.text = ""
         return super().detach_from()
@@ -146,7 +144,7 @@ class CthulhuRollResultPanel(BasePanel):
             new_roll = self.game.character.roll_skill(
                 self.roll_params.bonus, self.roll_params.penalty
             )
-            self.result = CthulhuGame.evaluate_roll(new_roll, self.roll_params)
+            self.result = self.game.evaluate_roll(new_roll, self.roll_params)
             self.result.outcome = f"{self.result.outcome}\n-- PUSHED ROLL --"
             self.roll_mode = "complete"
             self.render_labels()

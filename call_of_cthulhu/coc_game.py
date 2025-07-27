@@ -6,6 +6,7 @@ from panels.main_menu_panel import MainMenuPanel
 from call_of_cthulhu.coc_characteristics_panel import CthulhuCharacteristicsPanel
 from call_of_cthulhu.coc_stats_panel import CthulhuStatsPanel
 from call_of_cthulhu.coc_equipment_panel import CthulhuEquipmentPanel
+from call_of_cthulhu.coc_sanity_roll_panel import CthulhuSanityRollPanel
 from touch_ui import LightTouchButton
 
 BUTTON_WIDTH = 220
@@ -88,20 +89,29 @@ class CthulhuGame:
                 callback=lambda b: self.open_equipment_panel(context),
             ),
             LightTouchButton(
+                "sanity",
+                BUTTON_RIGHT,
+                BUTTON_RIGHT,
+                BUTTON_WIDTH,
+                BUTTON_HEIGHT,
+                "Sanity",
+                callback=lambda b: self.open_sanity_panel(context),
+            ),
+            LightTouchButton(
                 "exit",
                 BUTTON_LEFT,
-                BUTTON_RIGHT,
+                BUTTON_RIGHT + 60,
                 BUTTON_WIDTH,
                 BUTTON_HEIGHT,
                 "Save & Exit",
                 callback=lambda b: self.save_and_exit(context),
             ),
-            # LightTouchButton("equipment", 120, 120, 220, 30, "Equipment", callback=self.open_equipment_panel(context)),
         ]
         panel.add_buttons(buttons)
         return panel
 
     def setup_panels(self, context):
+
         pool = self.get_panel_pool()
         pool.register_factory("main", lambda: self.build_main_menu(context))
         pool.register_factory("skills", lambda: CthulhuSkillsPanel(self, context))
@@ -110,11 +120,17 @@ class CthulhuGame:
         )
         pool.register_factory("stats", lambda: CthulhuStatsPanel(self, context))
         pool.register_factory("equipment", lambda: CthulhuEquipmentPanel(self, context))
+        pool.register_factory("sanity", lambda: CthulhuSanityRollPanel(self, context))
 
     def save_and_exit(self, context):
         if self.character:
             self.character.save()
         context.should_exit = True
+
+    def open_sanity_panel(self, context):
+        panel = self.get_panel_pool().get("sanity")
+        context.cache_panel("sanity", panel)
+        context.transition_to("sanity")
 
     def open_characteristics_panel(self, context):
         panel = self.get_panel_pool().get("characteristics")
