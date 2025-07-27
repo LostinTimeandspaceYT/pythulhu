@@ -3,8 +3,11 @@ from panels.text_viewport import TextViewport
 from panels.base_panel import BasePanel
 from panels.nav_mixin import PanelNavigationMixin
 
+
 class CthulhuSkillsPanel(BasePanel, PanelNavigationMixin):
-    def __init__(self, game, context, x=10, y=10, width=300, height=160, lines_per_column=7):
+    def __init__(
+        self, game, context, x=10, y=10, width=300, height=160, lines_per_column=7
+    ):
         super().__init__(context)
         PanelNavigationMixin.__init__(self)
         self.game = game
@@ -41,17 +44,21 @@ class CthulhuSkillsPanel(BasePanel, PanelNavigationMixin):
         self.group.append(self.left_view.group)
         self.group.append(self.right_view.group)
         # Vertical divider line between the columns
-        divider_x =  width // 2
+        divider_x = width // 2
         self.divider = Line(divider_x, y, divider_x, y + height, color=0x444444)
         self.group.append(self.divider)
 
         self.all_lines = self.get_all_skill_lines()
-        self.total_pages = (len(self.all_lines) + self.total_lines_per_page - 1) // self.total_lines_per_page
+        self.total_pages = (
+            len(self.all_lines) + self.total_lines_per_page - 1
+        ) // self.total_lines_per_page
 
     def attach_to(self):
         super().attach_to()
         self.context.show_nav_button("prev", callback=lambda b: self.prev_page())
-        self.context.show_nav_button("back", callback=lambda b: self.context.return_home())
+        self.context.show_nav_button(
+            "back", callback=lambda b: self.context.return_home()
+        )
         self.context.show_nav_button("next", callback=lambda b: self.next_page())
         self.update_page()
         self.mode = "select"
@@ -81,7 +88,9 @@ class CthulhuSkillsPanel(BasePanel, PanelNavigationMixin):
 
     def refresh_skills(self):
         self.all_lines = self.get_all_skill_lines()
-        self.total_pages = (len(self.all_lines) + self.total_lines_per_page - 1) // self.total_lines_per_page
+        self.total_pages = (
+            len(self.all_lines) + self.total_lines_per_page - 1
+        ) // self.total_lines_per_page
         self.update_page()
 
     def update(self):
@@ -154,15 +163,17 @@ class CthulhuSkillsPanel(BasePanel, PanelNavigationMixin):
 
     def open_skill_roll_panel(self, skill_name: str):
         from call_of_cthulhu.coc_skill_roll_panel import SkillRollPanel
+
         skill_val = self.game.character.get_value_at(skill_name)
 
         def close_panel(_result=None):
             self.refresh_skills()
-            self.context.transition_to("main")
+            self.context.return_home()
 
         self.game.get_panel_pool().release("skills")
         self.hal.clear_display()
         import gc
+
         gc.collect()
 
         roll_panel = self.context.get_panel("roll")
@@ -174,7 +185,7 @@ class CthulhuSkillsPanel(BasePanel, PanelNavigationMixin):
                 context=self.context,
                 skill_name=skill_name,
                 skill_val=skill_val,
-                cancel_callback=close_panel
+                cancel_callback=close_panel,
             )
             self.context.cache_panel("roll", roll_panel)
 

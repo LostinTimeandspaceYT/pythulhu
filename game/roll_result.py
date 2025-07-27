@@ -1,4 +1,3 @@
-
 class RollResult:
     def __init__(self, roll: int, outcome: str, level: int):
         """
@@ -16,7 +15,7 @@ class RollResult:
         return self.summary()
 
     def passed(self, difficulty: int = 1) -> bool:
-        return self.success_level  >= difficulty
+        return self.success_level >= difficulty
 
     def stylize(self, difficulty: int) -> int:
         if self.outcome.startswith("Critical"):

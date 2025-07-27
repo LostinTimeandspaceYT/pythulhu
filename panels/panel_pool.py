@@ -1,4 +1,3 @@
-
 class PanelPool:
     def __init__(self):
         self.pool = {}  # name → panel
@@ -22,6 +21,7 @@ class PanelPool:
             panel.detach_from()
             del panel
             import gc
+
             gc.collect()
 
     def clear(self):

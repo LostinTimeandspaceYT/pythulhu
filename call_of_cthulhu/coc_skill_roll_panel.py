@@ -3,27 +3,29 @@ import terminalio
 from panels.base_panel import BasePanel
 from call_of_cthulhu.coc_game import CthulhuGame
 from call_of_cthulhu.coc_roll_params import CthulhuRollParams
-from call_of_cthulhu.coc_roll_result_panel import CthulhuRollResultPanel 
+from call_of_cthulhu.coc_roll_result_panel import CthulhuRollResultPanel
 
 
 class SkillRollPanel(BasePanel):
     # Explicit display order
     PARAM_KEYS = ["Bonus", "Penalty", "Difficulty", "Confirm"]
     __slots__ = (
-    "cancel_callback",
-    "skill_val",
-    "skill_name",
-    "result",
-    "bonus",
-    "penalty",
-    "difficulty",
-    "confirm_selected",
-    "selected_index",
-    "last_encoder_position",
-    "labels"
+        "cancel_callback",
+        "skill_val",
+        "skill_name",
+        "result",
+        "bonus",
+        "penalty",
+        "difficulty",
+        "confirm_selected",
+        "selected_index",
+        "last_encoder_position",
+        "labels",
     )
 
-    def __init__(self, game, context, skill_name: str, skill_val: int, cancel_callback=None):
+    def __init__(
+        self, game, context, skill_name: str, skill_val: int, cancel_callback=None
+    ):
         super().__init__(context)
         self.game = game
         self.cancel_callback = cancel_callback
@@ -61,14 +63,14 @@ class SkillRollPanel(BasePanel):
             "Bonus": self.bonus,
             "Penalty": self.penalty,
             "Difficulty": self.difficulty,
-            "Confirm": self.confirm_selected
+            "Confirm": self.confirm_selected,
         }
         self.render_option_labels(
             labels=self.labels,
             start_y=y,
             selected_index=self.selected_index,
             param_keys=self.PARAM_KEYS,
-            param_values=param_dict
+            param_values=param_dict,
         )
 
     def on_mode_change(self):
@@ -126,15 +128,14 @@ class SkillRollPanel(BasePanel):
     def roll(self):
         if self.result is None:
             roll = self.game.character.roll_skill(
-                bonus_die=self.bonus,
-                penalty_die=self.penalty
+                bonus_die=self.bonus, penalty_die=self.penalty
             )
             roll_params = CthulhuRollParams(
                 name=self.skill_name,
                 base_val=self.skill_val,
                 bonus=self.bonus,
                 penalty=self.penalty,
-                difficulty=self.difficulty
+                difficulty=self.difficulty,
             )
             self.result = CthulhuGame.evaluate_roll(roll, params=roll_params)
 
@@ -143,7 +144,7 @@ class SkillRollPanel(BasePanel):
                 context=self.context,
                 result=self.result,
                 params=roll_params,
-                on_complete=self.cancel_callback
+                on_complete=self.cancel_callback,
             )
             prev = self.context.active_panel
             if prev:
@@ -153,7 +154,6 @@ class SkillRollPanel(BasePanel):
             self.context.transition_to("roll_result", 1)
             self.result = None
             return
-
 
     def update(self):
         super().update()  # handles button press + mode toggle
@@ -165,7 +165,9 @@ class SkillRollPanel(BasePanel):
                 else:
                     self.move_selection_up()
             elif self.mode == "edit":
-                self.modify_selected_param(increment=(current_position > self.last_encoder_position))
+                self.modify_selected_param(
+                    increment=(current_position > self.last_encoder_position)
+                )
             self.last_encoder_position = current_position
 
         # When we're finally ready to roll

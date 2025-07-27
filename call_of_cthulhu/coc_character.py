@@ -6,6 +6,7 @@ HP = "Hit Points"
 MP = "Magic Points"
 SAN = "Sanity"
 
+
 class CthulhuCharacter(PlayerCharacter):
 
     def __init__(self, fpath: str):
@@ -18,10 +19,7 @@ class CthulhuCharacter(PlayerCharacter):
         return f"{self.name} ({self.pronoun}) — HP: {self.current_hp}, SAN: {self.current_sanity}, MP: {self.current_mp}"
 
     def str_plus_siz(self) -> int:
-        return (
-            self.characteristics["STR"]
-            + self.characteristics["SIZ"]
-        )
+        return self.characteristics["STR"] + self.characteristics["SIZ"]
 
     def damage_bonus(self) -> tuple:
         """Returns a tuple (num_dice, num_side) such that -2 and -1 are const"""
@@ -63,12 +61,14 @@ class CthulhuCharacter(PlayerCharacter):
 
         for stat, val in self.characteristics.items():
             if isinstance(val, dict):
-                lines.append(f"  {stat}: {val.get('Current', '-')}/{val.get('Maximum', '-')}")
+                lines.append(
+                    f"  {stat}: {val.get('Current', '-')}/{val.get('Maximum', '-')}"
+                )
             else:
                 lines.append(f"  {stat}: {val}")
 
         if len(lines) > max_lines:
-            return lines[:max_lines - 1] + ["(... more ...)"]
+            return lines[: max_lines - 1] + ["(... more ...)"]
 
         # Truncate if needed
         return lines[:max_lines]

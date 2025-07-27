@@ -2,6 +2,7 @@ import displayio
 from adafruit_display_text.label import Label
 import terminalio
 
+
 class TextViewport:
     def __init__(
         self,
@@ -29,11 +30,7 @@ class TextViewport:
 
         for i in range(max_lines):
             label = Label(
-                terminalio.FONT,
-                text="",
-                color=text_color,
-                x=6,
-                y=i * line_height + 4
+                terminalio.FONT, text="", color=text_color, x=6, y=i * line_height + 4
             )
             self.group.append(label)
             self.labels.append(label)

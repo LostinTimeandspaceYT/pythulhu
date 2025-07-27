@@ -3,6 +3,7 @@ from adafruit_display_text import label
 from panels.nav_mixin import PanelNavigationMixin
 from panels.text_viewport import TextViewport
 
+
 class CthulhuCharacteristicsPanel(BasePanel, PanelNavigationMixin):
     def __init__(self, game, context):
         super().__init__(context)
@@ -12,21 +13,34 @@ class CthulhuCharacteristicsPanel(BasePanel, PanelNavigationMixin):
         self.page_index = 0
         self.selected_index = 0
         self.options = [
-            ["STR", "CON", "SIZ", "DEX", "APP",], ["INT", "POW", "EDU", "Luck", "Sanity"]
+            [
+                "STR",
+                "CON",
+                "SIZ",
+                "DEX",
+                "APP",
+            ],
+            ["INT", "POW", "EDU", "Luck", "Sanity"],
         ]
         self.last_encoder_position = self.hal.get_encoder_position()
         self.awaiting_release = False
         self.left_view = TextViewport(
-            x=10, y=10,
-            width=140, height=200,
-            max_lines=len(self.options[0]), line_height=22,
-            show_background=False
+            x=10,
+            y=10,
+            width=140,
+            height=200,
+            max_lines=len(self.options[0]),
+            line_height=22,
+            show_background=False,
         )
         self.right_view = TextViewport(
-            x=160, y=10,
-            width=140, height=200,
-            max_lines=len(self.options[1]), line_height=22,
-            show_background=False
+            x=160,
+            y=10,
+            width=140,
+            height=200,
+            max_lines=len(self.options[1]),
+            line_height=22,
+            show_background=False,
         )
         self.group.append(self.left_view.group)
         self.group.append(self.right_view.group)
@@ -36,7 +50,9 @@ class CthulhuCharacteristicsPanel(BasePanel, PanelNavigationMixin):
     def attach_to(self):
         super().attach_to()
         self.context.show_nav_button("prev", callback=lambda b: self.prev_page())
-        self.context.show_nav_button("back", callback=lambda b: self.context.return_home())
+        self.context.show_nav_button(
+            "back", callback=lambda b: self.context.return_home()
+        )
         self.context.show_nav_button("next", callback=lambda b: self.next_page())
         self.render()
         self.last_encoder_position = self.hal.get_encoder_position()
@@ -61,7 +77,11 @@ class CthulhuCharacteristicsPanel(BasePanel, PanelNavigationMixin):
         right_keys = page_lines[mid:]
         left_lines = [self.format_line(key) for key in left_keys]
         right_lines = [self.format_line(key) for key in right_keys]
-        self.apply_marker(left_lines=left_lines, right_lines=right_lines, selected_index=self.selected_index)
+        self.apply_marker(
+            left_lines=left_lines,
+            right_lines=right_lines,
+            selected_index=self.selected_index,
+        )
         self.left_view.set_lines(left_lines)
         self.right_view.set_lines(right_lines)
 
@@ -117,7 +137,7 @@ class CthulhuCharacteristicsPanel(BasePanel, PanelNavigationMixin):
             from call_of_cthulhu.coc_skill_roll_panel import SkillRollPanel
 
             def close_panel(_result=None):
-                self.context.transition_to("main")
+                self.game.context.return_home()
 
             roll_panel = self.context.get_cached_panel("roll")
             if roll_panel:
@@ -128,7 +148,7 @@ class CthulhuCharacteristicsPanel(BasePanel, PanelNavigationMixin):
                     context=self.context,
                     skill_name=key,
                     skill_val=val,
-                    cancel_callback=close_panel
+                    cancel_callback=close_panel,
                 )
                 self.context.cache_panel("roll", roll_panel)
 

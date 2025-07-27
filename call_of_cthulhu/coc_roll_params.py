@@ -1,6 +1,13 @@
-
 class CthulhuRollParams:
-    def __init__(self, *, name: str, base_val: int, bonus: int=0, penalty: int=0, difficulty: str="Normal"):
+    def __init__(
+        self,
+        *,
+        name: str,
+        base_val: int,
+        bonus: int = 0,
+        penalty: int = 0,
+        difficulty: str = "Normal",
+    ):
         self.name = name
         self.base_val = base_val
         self.bonus = bonus
@@ -21,7 +28,7 @@ class CthulhuRollParams:
         return {
             "Bonus": self.bonus,
             "Penalty": self.penalty,
-            "Difficulty": self.difficulty
+            "Difficulty": self.difficulty,
         }
 
     @property

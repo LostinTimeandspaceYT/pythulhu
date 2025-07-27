@@ -2,11 +2,11 @@ from ui_context import UIContext
 
 MAIN_MENU = "main"
 
+
 class GameRunner:
     def __init__(self, ui_context: UIContext, game):
         self.ui = ui_context
         self.game = game
-        pass
 
     def start(self):
         self.ui.set_home(MAIN_MENU)

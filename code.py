@@ -10,10 +10,8 @@ def start_main_menu(context: UIContext):
 	from game.game_runner import GameRunner
 
 	def start_game(runner: GameRunner):
-		# print("[DEBUG] Game setup complete.")
 		runner.start()
 
-	# print("[DEBUG] Starting game factory setup...")
 	factory = GameFactory(ui_context=context)
 	factory.select_and_build_runner(on_runner_ready=start_game)
 

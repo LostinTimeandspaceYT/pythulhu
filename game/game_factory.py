@@ -5,8 +5,10 @@ from panels.selector_panel import SelectorPanel
 from call_of_cthulhu.coc_game import CthulhuGame
 from call_of_cthulhu.coc_character import CthulhuCharacter, PulpCharacter
 
+
 class GameFactory:
     GAMES = {"call_of_cthulhu": CthulhuGame, "pulp_cthulhu": CthulhuGame}
+
     def __init__(self, ui_context: UIContext):
         self.ui = ui_context
 
@@ -16,14 +18,21 @@ class GameFactory:
             context=self.ui,
             title="Select Character",
             options=characters,
-            on_select=lambda character: on_runner_ready(self._build_runner(game_key, character)),
-            on_cancel=lambda: self.ui.transition_to("game_selector")
+            on_select=lambda character: on_runner_ready(
+                self._build_runner(game_key, character)
+            ),
+            on_cancel=lambda: self.ui.transition_to("game_selector"),
         )
         self.ui.cache_panel("char_selector", selector)
         self.ui.transition_to("char_selector")
 
     def select_and_build_runner(self, on_runner_ready):
-        selector = SelectorPanel(self.ui, "Select Game", list(self.GAMES.keys()), on_select=lambda game: self.select_character(game, on_runner_ready))
+        selector = SelectorPanel(
+            self.ui,
+            "Select Game",
+            list(self.GAMES.keys()),
+            on_select=lambda game: self.select_character(game, on_runner_ready),
+        )
         self.ui.cache_panel("game_selector", selector)
         self.ui.transition_to("game_selector")
 
@@ -37,4 +46,3 @@ class GameFactory:
             ui_context=self.ui,
             game=game,
         )
-

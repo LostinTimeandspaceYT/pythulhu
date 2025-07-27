@@ -2,8 +2,11 @@ from panels.base_panel import BasePanel
 from adafruit_display_text.label import Label
 import terminalio
 
+
 class SelectorPanel(BasePanel):
-    def __init__(self, context, title: str, options: list[str], on_select, on_cancel=None):
+    def __init__(
+        self, context, title: str, options: list[str], on_select, on_cancel=None
+    ):
         super().__init__(context)
         self.title = title
         self.options = options
@@ -33,7 +36,7 @@ class SelectorPanel(BasePanel):
             start_y=start_y,
             selected_index=self.selected_index,
             param_keys=self.options,
-            param_values={opt: "" for opt in self.options}  # no values, just labels
+            param_values={opt: "" for opt in self.options},  # no values, just labels
         )
 
     def attach_to(self):

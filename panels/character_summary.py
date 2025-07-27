@@ -1,6 +1,7 @@
 from panels.text_viewport import TextViewport
 import displayio
 
+
 class CharacterSummaryPanel:
     def __init__(self, character, x=10, y=10, width=300, height=160, max_lines=10):
         self.character = character
@@ -13,7 +14,7 @@ class CharacterSummaryPanel:
             max_lines=max_lines,
             line_height=14,
             show_background=True,
-            background_color=0x222222
+            background_color=0x222222,
         )
         self.group.append(self.viewport.group)
 

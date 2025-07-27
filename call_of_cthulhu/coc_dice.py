@@ -18,5 +18,9 @@ class CthulhuDice(Dice):
 
         total = tens + ones
         if total == 0:
-            return sorted(tens_rolls)[1] if bonus > penalty and len(tens_rolls) > 1 else 100
+            return (
+                sorted(tens_rolls)[1]
+                if bonus > penalty and len(tens_rolls) > 1
+                else 100
+            )
         return total

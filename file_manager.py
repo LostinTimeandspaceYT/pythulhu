@@ -9,6 +9,7 @@ MOUNT_POINT: str = "/sd"
 CHARACTER_PATH: str = MOUNT_POINT + "/characters/"
 IMAGES_PATH: str = MOUNT_POINT + "/assets/images/"
 
+
 class FileManager:
 
     @classmethod
@@ -48,7 +49,6 @@ class FileManager:
     @classmethod
     def get_image_path(cls, image_name: str) -> str:
         return IMAGES_PATH + image_name + ".bmp"
-
 
     # This helper function will print the contents of the SD
     # Taken from the adafruit examples

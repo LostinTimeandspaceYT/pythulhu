@@ -25,18 +25,15 @@ DEBUG = False
 displayio.release_displays()
 DISPLAY_WIDTH = 320
 DISPLAY_HEIGHT = 240
-COLORS = {
-    "fail": 0xFF0000,
-    "success": 0x00FF00,
-    "neutral": 0xFFFFFF,
-    "skill": 0x0000FF
-}
+COLORS = {"fail": 0xFF0000, "success": 0x00FF00, "neutral": 0xFFFFFF, "skill": 0x0000FF}
+
 
 class HAL:
     """
     The HAL acts as the primary interface between a game's logic and the hardware.
     This isn't a HAL in the traditional sense, but serves a similar purpose here.
     """
+
     seesaw = None
     display = None
     root_group = None
@@ -52,7 +49,7 @@ class HAL:
     def init(cls):
         if cls.is_init is True:
             return
-        
+
         cls.is_init = True
         cls.seesaw = seesaw.Seesaw(board.STEMMA_I2C(), addr=0x36)
         seesaw_product = (cls.seesaw.get_version() >> 16) & 0xFFFF
@@ -81,14 +78,16 @@ class HAL:
         tft_rst = board.D6
         tft_dc = board.D9
         display_bus = FourWire(spi, command=tft_dc, chip_select=tft_cs, reset=tft_rst)
-        cls.display = adafruit_ili9341.ILI9341(display_bus, width=DISPLAY_WIDTH, height=DISPLAY_HEIGHT)
+        cls.display = adafruit_ili9341.ILI9341(
+            display_bus, width=DISPLAY_WIDTH, height=DISPLAY_HEIGHT
+        )
         cls.root_group = displayio.Group()
-        cls.display.root_group = cls.root_group 
+        cls.display.root_group = cls.root_group
         cls.irq_dio = None
         cls.tsc = adafruit_tsc2007.TSC2007(board.I2C(), irq=cls.irq_dio)
 
     @classmethod
-    def rotate_display(cls, degrees: int)-> None:
+    def rotate_display(cls, degrees: int) -> None:
         cls.display.rotation = degrees
 
     @classmethod
@@ -121,10 +120,9 @@ class HAL:
                 text=line,
                 color=0xFFFFFF,
                 x=x_offset,
-                y=start_y + i * line_height
+                y=start_y + i * line_height,
             )
             cls.display.root_group.append(txt)
-
 
     @classmethod
     def display_image(cls, img_name: str) -> None:
@@ -136,28 +134,28 @@ class HAL:
             cls.root_group.append(tile_grid)
 
     @classmethod
-    def create_sprite(cls,
-        name: str,
-        width: int,
-        height: int
-    ) -> displayio.TileGrid:
+    def create_sprite(cls, name: str, width: int, height: int) -> displayio.TileGrid:
 
         path = FileManager.get_image_path(name)
         if path is not None:
-            sprite_sheet, palette = load_image(path, bitmap=displayio.Bitmap, palette=displayio.Palette)
+            sprite_sheet, palette = load_image(
+                path, bitmap=displayio.Bitmap, palette=displayio.Palette
+            )
 
             sprite = displayio.TileGrid(
-                sprite_sheet, 
+                sprite_sheet,
                 pixel_shader=palette,
-                width= 1,
-                height= 1,
-                tile_width= width,
-                tile_height=height
+                width=1,
+                height=1,
+                tile_width=width,
+                tile_height=height,
             )
             return sprite
 
     @classmethod
-    def ensure_text_group(cls, index: int, color=0xFFFFFF, font=terminalio.FONT, x=0, y=0):
+    def ensure_text_group(
+        cls, index: int, color=0xFFFFFF, font=terminalio.FONT, x=0, y=0
+    ):
         if len(cls.root_group) <= index:
             for _ in range(index - len(cls.root_group) + 1):
                 cls.root_group.append(displayio.Group())
@@ -206,4 +204,3 @@ class HAL:
             point = cls.tsc.touch
             return (point["x"], point["y"])
         return None
-
