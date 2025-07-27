@@ -137,7 +137,7 @@ class CthulhuCharacteristicsPanel(BasePanel, PanelNavigationMixin):
             from call_of_cthulhu.coc_skill_roll_panel import SkillRollPanel
 
             def close_panel(_result=None):
-                self.game.context.return_home()
+                self.context.return_home()
 
             roll_panel = self.context.get_cached_panel("roll")
             if roll_panel:
