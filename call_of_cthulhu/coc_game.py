@@ -85,7 +85,7 @@ class CthulhuGame:
                 BUTTON_WIDTH,
                 BUTTON_HEIGHT,
                 "Equipment",
-                callback=self.open_equipment_panel(context),
+                callback=lambda b: self.open_equipment_panel(context),
             ),
             LightTouchButton(
                 "exit",
