@@ -11,9 +11,37 @@ Electronic dice roller and character sheet interface for TTRPGs.
 
 ## Games Supported
 
-- Call of Cthulhu 7th edition (Weapon Damage & Sanity rules missing as of Jul 20, 2025)
+See Game road map below
+
+- Call of Cthulhu 7th edition
   - Pulp Cthulhu
 - ~~Cyberpunk Red~~ (After CoC is complete)
+
+## Road Maps
+
+Check here to see if your TTRPG of choice is supported and what features are coming down the pipeline.
+
+### Call of Cthulhu
+
+Feautres:
+- [x] Loads character sheets via `JSON`.
+- [x] Make skill rolls
+- [x] Make charactertisic rolls
+- [x] Marks skills for improvement 
+- [x] Added Panel for handling sanity rolls
+- [x] Added Logic to save character on exit. 
+- [x] Created panel for selecting equipped weapon
+- [ ] Add Movement Rate
+- [ ] Add Logic to deal with injuries and insanity flags
+- [ ] Add panel for handling combat
+- [ ] Add panel for inventory management
+- [ ] Add panel for development phase
+
+### Pulp Cthulhu
+
+- [ ] Add panel to check Talents
+- [ ] Incorporate Talents into game logic
+
 
 ## Libraries & Dependencies
 
@@ -68,8 +96,8 @@ Doesn't matter which one you choose.
 
 ### SD Card set up
 
-> [!todo]  
-> Package dependencies in future release
+> [!note]  
+> TODO: Package dependencies in future release
 
 - clone the repo
 - install circuit python version 9.x.x onto Metro
