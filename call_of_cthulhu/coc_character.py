@@ -10,12 +10,30 @@ SAN = "Sanity"
 class CthulhuCharacter(PlayerCharacter):
     def __init__(self, fpath: str):
         super().__init__(fpath)
-        self.prev_skill_modifier: int = 0  # used when pushing rolls.
-        self.current_weapon: dict = {}
-        self.skills_to_improve: list[str] = []  # Used during Development phase
+        self.prev_skill_modifier = 0
+        self.current_weapon = {}
+        self.skills_to_improve: list[str] = set()
+
+        self._improvement_path = fpath.rsplit(".", 1)[0] + ".improve.txt"
+        self._load_improvements()
 
     def __str__(self):
         return f"{self.name} ({self.pronoun}) — HP: {self.current_hp}, SAN: {self.current_sanity}, MP: {self.current_mp}"
+
+    def _load_improvements(self):
+        try:
+            with open(self._improvement_path, "r") as f:
+                self.skills_to_improve = {line.strip() for line in f if line.strip()}
+        except OSError:
+            self.skills_to_improve = set()
+
+    def _save_improvements(self):
+        try:
+            with open(self._improvement_path, "w") as f:
+                for skill in sorted(self.skills_to_improve):
+                    f.write(skill + "\n")
+        except OSError as e:
+            print("Failed to save improvements:", e)
 
     def str_plus_siz(self) -> int:
         return self.characteristics["STR"] + self.characteristics["SIZ"]
@@ -88,14 +106,20 @@ class CthulhuCharacter(PlayerCharacter):
 
     def mark_skill_for_improvement(self, skill_name: str):
         if skill_name not in self.skills_to_improve:
-            self.skills_to_improve.append(skill_name)
+            self.skills_to_improve.add(skill_name)
+            self._save_improvements()
 
-    def get_improvable_skills(self) -> list[str]:
-        """Return a copy of the skills to improve."""
-        return self.skills_to_improve.copy()
+    def unmark_skill(self, skill_name: str):
+        if skill_name in self.skills_to_improve:
+            self.skills_to_improve.remove(skill_name)
+            self._save_improvements()
 
     def clear_improvements(self):
         self.skills_to_improve.clear()
+        self._save_improvements()
+
+    def get_improvable_skills(self) -> list[str]:
+        return sorted(self.skills_to_improve)
 
     def cast_spell(self, spell_name: str):
         print(f"Casting {spell_name}!")
