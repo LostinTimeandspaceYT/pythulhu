@@ -31,11 +31,11 @@ Feautres:
 - [x] Added Panel for handling sanity rolls
 - [x] Added Logic to save character on exit. 
 - [x] Created panel for selecting equipped weapon
+- [x] Add panel for development phase
 - [ ] Add Movement Rate
 - [ ] Add Logic to deal with injuries and insanity flags
 - [ ] Add panel for handling combat
 - [ ] Add panel for inventory management
-- [ ] Add panel for development phase
 
 ### Pulp Cthulhu
 
