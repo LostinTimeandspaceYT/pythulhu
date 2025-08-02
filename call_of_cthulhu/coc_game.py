@@ -7,6 +7,8 @@ from call_of_cthulhu.coc_characteristics_panel import CthulhuCharacteristicsPane
 from call_of_cthulhu.coc_stats_panel import CthulhuStatsPanel
 from call_of_cthulhu.coc_equipment_panel import CthulhuEquipmentPanel
 from call_of_cthulhu.coc_sanity_roll_panel import CthulhuSanityRollPanel
+from call_of_cthulhu.coc_development_panel import CthulhuDevelopmentPhasePanel
+from call_of_cthulhu.coc_dice import CthulhuDice
 from touch_ui import LightTouchButton
 
 BUTTON_WIDTH = 220
@@ -89,6 +91,15 @@ class CthulhuGame:
                 callback=lambda b: self.open_equipment_panel(context),
             ),
             LightTouchButton(
+                "development",
+                BUTTON_LEFT,
+                BUTTON_RIGHT,
+                BUTTON_WIDTH,
+                BUTTON_HEIGHT,
+                "Development",
+                callback=lambda b: self.open_development_panel(context),
+            ),
+            LightTouchButton(
                 "sanity",
                 BUTTON_RIGHT,
                 BUTTON_RIGHT,
@@ -111,7 +122,6 @@ class CthulhuGame:
         return panel
 
     def setup_panels(self, context):
-
         pool = self.get_panel_pool()
         pool.register_factory("main", lambda: self.build_main_menu(context))
         pool.register_factory("skills", lambda: CthulhuSkillsPanel(self, context))
@@ -121,11 +131,19 @@ class CthulhuGame:
         pool.register_factory("stats", lambda: CthulhuStatsPanel(self, context))
         pool.register_factory("equipment", lambda: CthulhuEquipmentPanel(self, context))
         pool.register_factory("sanity", lambda: CthulhuSanityRollPanel(self, context))
+        pool.register_factory(
+            "development", lambda: CthulhuDevelopmentPhasePanel(self, context)
+        )
 
     def save_and_exit(self, context):
         if self.character:
             self.character.save()
         context.should_exit = True
+
+    def open_development_panel(self, context):
+        panel = self.get_panel_pool().get("development")
+        context.cache_panel("development", panel)
+        context.transition_to("development")
 
     def open_sanity_panel(self, context):
         panel = self.get_panel_pool().get("sanity")
@@ -151,6 +169,18 @@ class CthulhuGame:
         panel = self.get_panel_pool().get("equipment")
         context.cache_panel("equipment", panel)
         context.transition_to("equipment")
+
+    def perform_luck_refresh(self, result_log=None):
+        """Perform a luck refresh for the active character."""
+        current = self.character.current_luck
+        roll = CthulhuDice.roll(1, 100)
+        gained = CthulhuDice.roll(2, 10) if roll > current else CthulhuDice.roll(1, 10)
+        self.character.characteristics["Luck"] += gained
+
+        if result_log is not None:
+            result_log.append(
+                f"Luck Refresh — Rolled {roll}, Gained {gained}, New: {self.character.current_luck}"
+            )
 
     @classmethod
     def get_diff_level_thresholds(cls, val: int) -> dict:
