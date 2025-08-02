@@ -49,8 +49,9 @@ class LightTouchButton:
         if not point:
             return False
         px, py = point
-        return (self.x <= px <= self.x + self.width and
-                self.y <= py <= self.y + self.height)
+        return (
+            self.x <= px <= self.x + self.width and self.y <= py <= self.y + self.height
+        )
 
     def press(self):
         if self.callback:
@@ -58,8 +59,18 @@ class LightTouchButton:
 
 
 class TouchButton:
-    def __init__(self, name, x, y, width, height, label_text, callback=None,
-                 toggle=False, group=None):
+    def __init__(
+        self,
+        name,
+        x,
+        y,
+        width,
+        height,
+        label_text,
+        callback=None,
+        toggle=False,
+        group=None,
+    ):
         self.name = name
         self.callback = callback
         self.toggleable = toggle
@@ -72,7 +83,10 @@ class TouchButton:
         self.height = height
 
         self.button = Button(
-            x=x, y=y, width=width, height=height,
+            x=x,
+            y=y,
+            width=width,
+            height=height,
             label=label_text,
             label_font=terminalio.FONT,
             label_color=0xFFFFFF,
@@ -80,7 +94,7 @@ class TouchButton:
             outline_color=0xAAAAAA,
             selected_fill=0x3333FF,
             selected_outline=0xFFFFFF,
-            style=Button.RECT
+            style=Button.RECT,
         )
 
         self._original_fill = self.button.fill_color
@@ -122,13 +136,16 @@ class TouchButton:
         if not point:
             return False
         x, y = point
-        return (self.x <= x <= self.x + self.width and
-                self.y <= y <= self.y + self.height)
+        return (
+            self.x <= x <= self.x + self.width and self.y <= y <= self.y + self.height
+        )
 
     def debug_touch(self, touch_point):
         x, y = touch_point
         print(f"[{self.name}] Touch at: ({x}, {y})")
-        print(f"[{self.name}] Button bounds: x={self.x}, y={self.y}, w={self.width}, h={self.height}")
+        print(
+            f"[{self.name}] Button bounds: x={self.x}, y={self.y}, w={self.width}, h={self.height}"
+        )
         print(f"[{self.name}] Hit test result: {self.contains((x, y))}")
         print(f"[{self.name}] Selected state: {self.is_toggled()}")
 
@@ -160,7 +177,6 @@ class TouchManager:
         self.flip_x = False
         self.flip_y = True
         self.swap_xy = True
-
 
         # Default calibration (can be overridden)
         self.raw_min_x = 350

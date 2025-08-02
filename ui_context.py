@@ -3,6 +3,7 @@ from time import sleep
 from touch_ui import TouchManager
 from hardware import HAL
 
+
 class UIContext:
     def __init__(self, hal, manager, nav_buttons):
         self.hal: HAL = hal
@@ -46,7 +47,7 @@ class UIContext:
         self.active_panel = next_panel
         next_panel.attach_to()
 
-    def transition_to(self, name: str, delay_secs: float=0.5):
+    def transition_to(self, name: str, delay_secs: float = 0.5):
         gc.collect()
         if self.active_panel:
             self.active_panel.detach_from()
@@ -54,7 +55,6 @@ class UIContext:
         if delay_secs > 0.0:
             sleep(delay_secs)
         self.switch_to(name)
-
 
     def set_home(self, name: str):
         self.home = name
@@ -84,4 +84,3 @@ class UIContext:
         gc.collect()
         self.hal.reset_display()
         self.manager.buttons.clear()
-
