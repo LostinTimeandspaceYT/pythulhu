@@ -5,14 +5,8 @@ from call_of_cthulhu.coc_dice import CthulhuDice
 
 class CthulhuDevelopmentPhasePanel(BasePanel):
     __slots__ = (
-        "game",
-        "character",
-        "skills",
-        "results",
-        "left_view",
-        "step_index",
-        "finished",
-        "on_complete",
+        "game", "character", "skills", "results",
+        "left_view", "step_index", "finished", "on_complete"
     )
 
     def __init__(self, game, context, on_complete=None):
@@ -27,13 +21,8 @@ class CthulhuDevelopmentPhasePanel(BasePanel):
         self.on_complete = on_complete
 
         self.left_view = TextViewport(
-            x=10,
-            y=10,
-            width=300,
-            height=220,
-            max_lines=10,
-            line_height=20,
-            show_background=False,
+            x=10, y=10, width=300, height=220,
+            max_lines=10, line_height=20, show_background=False
         )
         self.group.append(self.left_view.group)
 
@@ -46,7 +35,7 @@ class CthulhuDevelopmentPhasePanel(BasePanel):
                 "Development Phase",
                 f"{len(self.skills)} skill(s) to improve...",
                 "---",
-                "Tap NEXT to begin",
+                "Tap NEXT to begin"
             ]
             self.context.show_nav_button("next", callback=self._advance)
 
@@ -88,6 +77,7 @@ class CthulhuDevelopmentPhasePanel(BasePanel):
         self.left_view.set_lines(self.results[-10:])
         self.context.hide_nav_button("next")
         self.context.show_nav_button("back", callback=self._complete)
+
 
     def _complete(self, button=None):
         if self.on_complete:

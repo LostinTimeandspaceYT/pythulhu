@@ -122,6 +122,7 @@ class CthulhuGame:
         return panel
 
     def setup_panels(self, context):
+
         pool = self.get_panel_pool()
         pool.register_factory("main", lambda: self.build_main_menu(context))
         pool.register_factory("skills", lambda: CthulhuSkillsPanel(self, context))
