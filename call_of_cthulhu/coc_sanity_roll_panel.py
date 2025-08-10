@@ -6,10 +6,13 @@ from call_of_cthulhu.coc_sanity_result_panel import CthulhuSanityResultPanel
 
 
 class CthulhuSanityRollPanel(BasePanel):
-    PARAM_KEYS = ["Bonus", "Penalty", "Difficulty", "Confirm"]
+    PARAM_KEYS = ["Bonus", "Penalty", "Difficulty", "SAN Count", "SAN Sides", "Confirm"]
+    DIE_SIDES_OPTIONS = [2, 3, 4, 6, 8, 10, 12, 20, 100]
+
     __slots__ = (
         "cancel_callback",
-        "sanity_val",
+        "san_val",
+        "san_die",
         "result",
         "difficulty",
         "confirm_selected",
@@ -21,17 +24,17 @@ class CthulhuSanityRollPanel(BasePanel):
         "penalty",
     )
 
-    def __init__(self, game, context, cancel_callback=None):
+    def __init__(self, game, context):
         super().__init__(context)
         self.game = game
-        self.cancel_callback = cancel_callback
         self.labels = []
         self._reset_state()
         self._init_labels()
 
     def _reset_state(self):
         self.result = None
-        self.sanity_val = self.game.character.current_sanity
+        self.san_val = self.game.character.current_sanity
+        self.san_die = (1, 6)
         self.difficulty = "Normal"
         self.bonus = 0
         self.penalty = 0
@@ -50,13 +53,17 @@ class CthulhuSanityRollPanel(BasePanel):
 
     def render_labels(self):
         y = 10
-        self.labels[0].text = "Sanity Check (%d)" % self.sanity_val
+        self.labels[0].text = "Current Sanity: (%d)" % self.san_val
         self.labels[0].y = y
         y += 20
+
+        num, sides = self.san_die
         param_dict = {
             "Bonus": self.bonus,
             "Penalty": self.penalty,
             "Difficulty": self.difficulty,
+            "SAN Count": num,
+            "SAN Sides": sides,
             "Confirm": self.confirm_selected,
         }
         self.render_option_labels(
@@ -92,13 +99,31 @@ class CthulhuSanityRollPanel(BasePanel):
         elif key == "Penalty":
             delta = 1 if increment else -1
             self.penalty = max(0, min(3, self.penalty + delta))
+        elif key == "SAN Count":
+            num, sides = self.san_die
+            delta = 1 if increment else -1
+            num = max(1, min(10, num + delta))
+            self.san_die = (num, sides)
+        elif key == "SAN Sides":
+            num, sides = self.san_die
+            idx = self.DIE_SIDES_OPTIONS.index(sides)
+            idx = (
+                (idx + 1) % len(self.DIE_SIDES_OPTIONS)
+                if increment
+                else (idx - 1) % len(self.DIE_SIDES_OPTIONS)
+            )
+            self.san_die = (num, self.DIE_SIDES_OPTIONS[idx])
         self.render_labels()
 
     def attach_to(self):
         super().attach_to()
         self.context.hide_nav_button("prev")
-        self.context.show_nav_button("back", callback=self.cancel_callback)
+        self.context.show_nav_button(
+            "back", callback=lambda b: self.context.return_home()
+        )
         self.context.hide_nav_button("next")
+        self._reset_state()
+        self._init_labels()
 
     def detach_from(self):
         for label in self.labels:
@@ -113,10 +138,15 @@ class CthulhuSanityRollPanel(BasePanel):
             )
             roll_params = CthulhuRollParams(
                 name="Sanity",
-                base_val=self.sanity_val,
+                base_val=self.san_val,
                 bonus=self.bonus,
                 penalty=self.penalty,
                 difficulty=self.difficulty,
+                can_improve=False,
+                can_push=False,
+                can_spend_luck=False,
+                extra_dice=[self.san_die],
+                extra_tag="san loss",
             )
             self.result = self.game.evaluate_roll(roll, params=roll_params)
 
