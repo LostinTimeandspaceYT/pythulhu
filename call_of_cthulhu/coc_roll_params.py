@@ -1,21 +1,44 @@
 class CthulhuRollParams:
+    """
+    Generic roll parameters for CoC.
+    - `extra_dice`: list of (num_dice, sides) tuples for any follow-up rolls.
+      Panels decide WHEN to use these (e.g., on fail for SAN loss, on success for damage).
+    """
+
     def __init__(
         self,
-        *,
-        name: str,
-        base_val: int,
-        bonus: int = 0,
-        penalty: int = 0,
-        difficulty: str = "Normal",
+        name,
+        base_val,
+        bonus=0,
+        penalty=0,
+        difficulty="Normal",
+        can_spend_luck=True,
+        can_push=True,
+        can_improve=True,
+        extra_dice=None,
+        extra_tag=None,
     ):
         self.name = name
         self.base_val = base_val
         self.bonus = bonus
         self.penalty = penalty
         self.difficulty = difficulty
-        self._can_push = True
-        self._can_spend_luck = True
-        self.can_improve = True
+
+        self.can_improve = can_improve
+        self.can_spend_luck = can_spend_luck
+        self.can_push = can_push
+        # list[(int num, int sides)]
+        self.extra_dice = extra_dice or []
+        self.extra_tag = extra_tag
+
+    # convenience: returns a string like "1d6+1d4"
+    def extra_dice_str(self):
+        if not self.extra_dice:
+            return ""
+        parts = []
+        for num, sides in self.extra_dice:
+            parts.append(f"{num}d{sides}")
+        return "+".join(parts)
 
     def __str__(self):
         return f"Bonus: {self.bonus}, Penalty: {self.penalty}, Difficulty: {self.difficulty}"
@@ -30,27 +53,3 @@ class CthulhuRollParams:
             "Penalty": self.penalty,
             "Difficulty": self.difficulty,
         }
-
-    @property
-    def can_push(self):
-        return self._can_push
-
-    @can_push.setter
-    def can_push(self, value: bool):
-        self._can_push = value
-        if value:
-            self._can_spend_luck = False
-
-    @property
-    def can_spend_luck(self):
-        return self._can_spend_luck
-
-    @can_spend_luck.setter
-    def can_spend_luck(self, value: bool):
-        self._can_spend_luck = value
-        if value:
-            self._can_push = False
-
-    def can_push_and_spend(self):
-        self._can_push = True
-        self._can_spend_luck = True
