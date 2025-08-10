@@ -24,7 +24,7 @@ def main():
     nav_buttons = {
         "prev": LightTouchButton("prev", 10, 200, 80, 30, "Prev"),
         "next": LightTouchButton("next", 230, 200, 80, 30, "Next"),
-        "back": LightTouchButton("back", 110, 200, 100, 30, "Back"),
+        "back": LightTouchButton("back", 110, 200, 80, 30, "Back"),
     }
     context = UIContext(hal=HAL, manager=manager, nav_buttons=nav_buttons)
     HAL.fill_all_pixels(0xFF00FF)  # Purple by default
