@@ -55,33 +55,6 @@ class PlayerCharacter:
 
         return JSONParser.get_keys(section_data)
 
-    def render_summary_lines(self, max_lines=15) -> list[str]:
-        """Returns a list of displayable summary lines for the character sheet."""
-        lines = [
-            f"Name: {self.name}",
-            f"Age: {self.age}",
-        ]
-
-        pronoun = self._sheet.get("Pronoun")
-        if pronoun:
-            lines.append(f"Pronoun: {pronoun}")
-
-        if "Characteristics" in self._sheet:
-            char = self._sheet["Characteristics"]
-            lines += ["", "Characteristics:"]
-            for stat, val in char.items():
-                if isinstance(val, dict):
-                    lines.append(
-                        f"  {stat}: {val.get('Current','-')}/{val.get('Maximum','-')}"
-                    )
-                else:
-                    lines.append(f"  {stat}: {val}")
-
-        if len(lines) > max_lines:
-            return lines[: max_lines - 1] + ["(... more ...)"]
-
-        return lines
-
     def _create_backup(self, bak_path):
         with open(self._fpath, "r") as src, open(bak_path, "w") as dst:
             for line in src:

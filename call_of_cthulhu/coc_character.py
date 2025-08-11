@@ -1,5 +1,4 @@
 from game.player_character import PlayerCharacter
-from call_of_cthulhu.coc_dice import CthulhuDice
 
 CHAR = "Characteristics"
 HP = "Hit Points"
@@ -52,7 +51,7 @@ class CthulhuCharacter(PlayerCharacter):
         else:
             return 2
 
-    def damage_bonus(self) -> tuple:
+    def damage_bonus(self) -> tuple[int, int]:
         """Returns a tuple (num_dice, num_side) such that -2 and -1 are const"""
         val = self.str_plus_siz()
         if val <= 64:
@@ -65,38 +64,6 @@ class CthulhuCharacter(PlayerCharacter):
             return (1, 4)
         else:
             return (1, 6)
-
-    def render_summary_lines(self, max_lines: int = 15) -> list[str]:
-        lines = [
-            f"Name: {self.name}",
-            f"Pronoun: {self.pronoun}" if hasattr(self, "pronoun") else "",
-            f"Age: {self.age}",
-        ]
-
-        if hasattr(self, "current_hp"):
-            lines.append(f"HP: {self.current_hp}")
-        if hasattr(self, "current_mp"):
-            lines.append(f"MP: {self.current_mp}")
-        if hasattr(self, "current_sanity"):
-            lines.append(f"Sanity: {self.current_sanity}")
-        if hasattr(self, "current_luck"):
-            lines.append(f"Luck: {self.current_luck}")
-
-        lines += ["", "Characteristics:"]
-
-        for stat, val in self.characteristics.items():
-            if isinstance(val, dict):
-                lines.append(
-                    f"  {stat}: {val.get('Current', '-')}/{val.get('Maximum', '-')}"
-                )
-            else:
-                lines.append(f"  {stat}: {val}")
-
-        if len(lines) > max_lines:
-            return lines[: max_lines - 1] + ["(... more ...)"]
-
-        # Truncate if needed
-        return lines[:max_lines]
 
     def mark_skill_for_improvement(self, skill_name: str):
         if skill_name not in self.skills_to_improve:
