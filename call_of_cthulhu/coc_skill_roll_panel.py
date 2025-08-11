@@ -127,9 +127,7 @@ class SkillRollPanel(BasePanel):
 
     def roll(self):
         if self.result is None:
-            roll = self.game.character.roll_skill(
-                bonus_die=self.bonus, penalty_die=self.penalty
-            )
+            roll = self.game.roll_skill(bonus_die=self.bonus, penalty_die=self.penalty)
             roll_params = CthulhuRollParams(
                 name=self.skill_name,
                 base_val=self.skill_val,

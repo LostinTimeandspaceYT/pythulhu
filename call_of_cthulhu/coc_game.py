@@ -158,6 +158,10 @@ class CthulhuGame:
             )
 
     @classmethod
+    def roll_skill(self, bonus_die: int, penalty_die: int) -> int:
+        return CthulhuDice.roll_skill(bonus_die, penalty_die)
+
+    @classmethod
     def get_diff_level_thresholds(cls, val: int) -> dict:
         return {"Normal": int(val), "Hard": int(val * 0.5), "Extreme": int(val * 0.2)}
 

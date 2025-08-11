@@ -179,7 +179,7 @@ class CthulhuSanityResultPanel(BasePanel):
 
         if self.san_loss_amount >= 5:
             self.int_val = int(self.game.character.characteristics["INT"])
-            int_roll = self.game.character.roll_skill(bonus_die=0, penalty_die=0)
+            int_roll = self.game.roll_skill(bonus_die=0, penalty_die=0)
             int_params = CthulhuRollParams(
                 name="INT",
                 base_val=self.int_val,

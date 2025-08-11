@@ -132,7 +132,7 @@ class CthulhuSanityRollPanel(BasePanel):
 
     def roll(self):
         if self.result is None:
-            roll = self.game.character.roll_skill(
+            roll = self.game.roll_skill(
                 bonus_die=self.bonus,
                 penalty_die=self.penalty,
             )

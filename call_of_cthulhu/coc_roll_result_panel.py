@@ -129,7 +129,6 @@ class CthulhuRollResultPanel(BasePanel):
         self.render_labels()
 
     def finalize_roll(self):
-
         if self.roll_mode == "luck":
             if self.cost <= self.game.character.current_luck:
                 self.game.character.set_luck(
@@ -141,7 +140,7 @@ class CthulhuRollResultPanel(BasePanel):
                 self.render_labels()
                 return
         elif self.roll_mode == "push":
-            new_roll = self.game.character.roll_skill(
+            new_roll = self.game.roll_skill(
                 self.roll_params.bonus, self.roll_params.penalty
             )
             self.result = self.game.evaluate_roll(new_roll, self.roll_params)

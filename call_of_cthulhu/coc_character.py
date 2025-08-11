@@ -119,9 +119,6 @@ class CthulhuCharacter(PlayerCharacter):
         print(f"Casting {spell_name}!")
         # TODO: Flesh out spell logic
 
-    def roll_skill(self, bonus_die: int, penalty_die: int):
-        return CthulhuDice.roll_skill(bonus_die, penalty_die)
-
     def set_hit_points(self, value: int):
         self.sheet[CHAR][HP]["Current"] = max(0, value)
 
