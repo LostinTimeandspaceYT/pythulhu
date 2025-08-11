@@ -12,7 +12,7 @@ class CthulhuCharacter(PlayerCharacter):
         super().__init__(fpath)
         self.prev_skill_modifier = 0
         self.current_weapon = {}
-        self.skills_to_improve: list[str] = set()
+        self.skills_to_improve: set[str] = set()
 
         self._improvement_path = fpath.rsplit(".", 1)[0] + ".improve.txt"
         self._load_improvements()
@@ -48,7 +48,7 @@ class CthulhuCharacter(PlayerCharacter):
         elif 85 <= val <= 124:
             return 0
         elif 125 <= val <= 164:
-            return 2
+            return 1
         else:
             return 2
 
@@ -65,12 +65,6 @@ class CthulhuCharacter(PlayerCharacter):
             return (1, 4)
         else:
             return (1, 6)
-
-    def roll_damage(self, dmg_die: tuple) -> int:
-        if self.db[0] == 0:
-            return CthulhuDice.roll(*dmg_die)
-        else:  # to prevent empty range
-            return CthulhuDice.roll_multiple([dmg_die, self.db])
 
     def render_summary_lines(self, max_lines: int = 15) -> list[str]:
         lines = [

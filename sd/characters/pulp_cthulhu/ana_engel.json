@@ -108,7 +108,7 @@
   "Weapons": {
     "Weapon 1": {
       "Name": "Brawl",
-      "Damage ": "1d3 + db",
+      "Damage": "1d3 + db",
       "num of attacks": 1,
       "Range": "",
       "Ammo": null,
@@ -116,7 +116,7 @@
     },
     "Weapon 2": {
       "Name": ".25 Derringer",
-      "Damage ": "1d6",
+      "Damage": "1d6",
       "num of attacks": 1,
       "Range": "3 yards",
       "Ammo": 6,
