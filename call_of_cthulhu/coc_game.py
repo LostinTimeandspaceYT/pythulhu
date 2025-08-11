@@ -1,14 +1,14 @@
-from game.roll_result import RollResult
-from call_of_cthulhu.coc_roll_params import CthulhuRollParams
-from panels.panel_pool import PanelPool
-from call_of_cthulhu.coc_skills_panel import CthulhuSkillsPanel
-from panels.main_menu_panel import MainMenuPanel
 from call_of_cthulhu.coc_characteristics_panel import CthulhuCharacteristicsPanel
-from call_of_cthulhu.coc_stats_panel import CthulhuStatsPanel
-from call_of_cthulhu.coc_equipment_panel import CthulhuEquipmentPanel
-from call_of_cthulhu.coc_sanity_roll_panel import CthulhuSanityRollPanel
 from call_of_cthulhu.coc_development_panel import CthulhuDevelopmentPhasePanel
 from call_of_cthulhu.coc_dice import CthulhuDice
+from call_of_cthulhu.coc_equipment_panel import CthulhuEquipmentPanel
+from call_of_cthulhu.coc_roll_params import CthulhuRollParams
+from call_of_cthulhu.coc_sanity_roll_panel import CthulhuSanityRollPanel
+from call_of_cthulhu.coc_skills_panel import CthulhuSkillsPanel
+from call_of_cthulhu.coc_stats_panel import CthulhuStatsPanel
+from game.roll_result import RollResult
+from panels.main_menu_panel import MainMenuPanel
+from panels.panel_pool import PanelPool
 from touch_ui import LightTouchButton
 
 BUTTON_WIDTH = 220
@@ -61,7 +61,7 @@ class CthulhuGame:
                 BUTTON_WIDTH,
                 BUTTON_HEIGHT,
                 "Skills",
-                callback=lambda b: self.open_skills_panel(context),
+                callback=lambda b: self.open_panel(context, "skills"),
             ),
             LightTouchButton(
                 "characteristics",
@@ -70,7 +70,7 @@ class CthulhuGame:
                 BUTTON_WIDTH,
                 BUTTON_HEIGHT,
                 "Characteristics",
-                callback=lambda b: self.open_characteristics_panel(context),
+                callback=lambda b: self.open_panel(context, "characteristics"),
             ),
             LightTouchButton(
                 "stats",
@@ -79,7 +79,7 @@ class CthulhuGame:
                 BUTTON_WIDTH,
                 BUTTON_HEIGHT,
                 "Stats",
-                callback=lambda b: self.open_stats_panel(context),
+                callback=lambda b: self.open_panel(context, "stats"),
             ),
             LightTouchButton(
                 "equipment",
@@ -88,7 +88,7 @@ class CthulhuGame:
                 BUTTON_WIDTH,
                 BUTTON_HEIGHT,
                 "Equipment",
-                callback=lambda b: self.open_equipment_panel(context),
+                callback=lambda b: self.open_panel(context, "equipment"),
             ),
             LightTouchButton(
                 "development",
@@ -97,7 +97,7 @@ class CthulhuGame:
                 BUTTON_WIDTH,
                 BUTTON_HEIGHT,
                 "Development",
-                callback=lambda b: self.open_development_panel(context),
+                callback=lambda b: self.open_panel(context, "development"),
             ),
             LightTouchButton(
                 "sanity",
@@ -106,7 +106,7 @@ class CthulhuGame:
                 BUTTON_WIDTH,
                 BUTTON_HEIGHT,
                 "Sanity",
-                callback=lambda b: self.open_sanity_panel(context),
+                callback=lambda b: self.open_panel(context, "sanity"),
             ),
             LightTouchButton(
                 "exit",
@@ -122,7 +122,6 @@ class CthulhuGame:
         return panel
 
     def setup_panels(self, context):
-
         pool = self.get_panel_pool()
         pool.register_factory("main", lambda: self.build_main_menu(context))
         pool.register_factory("skills", lambda: CthulhuSkillsPanel(self, context))
@@ -141,35 +140,10 @@ class CthulhuGame:
             self.character.save()
         context.should_exit = True
 
-    def open_development_panel(self, context):
-        panel = self.get_panel_pool().get("development")
-        context.cache_panel("development", panel)
-        context.transition_to("development")
-
-    def open_sanity_panel(self, context):
-        panel = self.get_panel_pool().get("sanity")
-        context.cache_panel("sanity", panel)
-        context.transition_to("sanity")
-
-    def open_characteristics_panel(self, context):
-        panel = self.get_panel_pool().get("characteristics")
-        context.cache_panel("characteristics", panel)
-        context.transition_to("characteristics")
-
-    def open_skills_panel(self, context):
-        panel = self.get_panel_pool().get("skills")
-        context.cache_panel("skills", panel)
-        context.transition_to("skills")
-
-    def open_stats_panel(self, context):
-        panel = self.get_panel_pool().get("stats")
-        context.cache_panel("stats", panel)
-        context.transition_to("stats")
-
-    def open_equipment_panel(self, context):
-        panel = self.get_panel_pool().get("equipment")
-        context.cache_panel("equipment", panel)
-        context.transition_to("equipment")
+    def open_panel(self, context, name: str):
+        panel = self.get_panel_pool().get(name)
+        context.cache_panel(name, panel)
+        context.transition_to(name)
 
     def perform_luck_refresh(self, result_log=None):
         """Perform a luck refresh for the active character."""
