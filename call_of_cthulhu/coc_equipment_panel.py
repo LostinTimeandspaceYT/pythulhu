@@ -36,6 +36,7 @@ class CthulhuEquipmentPanel(BasePanel, PanelNavigationMixin):
         self.awaiting_release = False
         self.equipped_key = None
 
+        self._sync_from_character()
         self.render()
 
     def attach_to(self):
@@ -45,6 +46,7 @@ class CthulhuEquipmentPanel(BasePanel, PanelNavigationMixin):
         )
         self.selected_index = 0
         self.last_encoder_position = self.hal.get_encoder_position()
+        self._sync_from_character()
         self.render()
 
     def detach_from(self):
@@ -106,3 +108,33 @@ class CthulhuEquipmentPanel(BasePanel, PanelNavigationMixin):
             self.awaiting_release = False
 
         self.last_encoder_position = current_position
+
+    def _sync_from_character(self):
+        """Align equipped state and cursor with character.current_weapon."""
+        self.weapons = list(self.character.weapons.items())
+        cw = getattr(self.character, "current_weapon", None)
+        if not cw:
+            # default to first entry if available
+            self.selected_index = 0 if self.weapons else -1
+            self.equipped_key = None
+            return
+        # Find the key of the currently equipped weapon by identity or name
+        # (identity is preferred; fallback to name match)
+        target_name = (
+            str(cw.get("Name", "")).strip().lower() if isinstance(cw, dict) else ""
+        )
+        for idx, (k, v) in enumerate(self.weapons):
+            if v is cw:
+                self.selected_index = idx
+                self.equipped_key = k
+                return
+            if (
+                isinstance(v, dict)
+                and str(v.get("Name", "")).strip().lower() == target_name
+            ):
+                self.selected_index = idx
+                self.equipped_key = k
+                return
+        # If we didn’t find a match, fall back to first
+        self.selected_index = 0 if self.weapons else -1
+        self.equipped_key = None
