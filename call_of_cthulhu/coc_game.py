@@ -6,6 +6,7 @@ from call_of_cthulhu.coc_roll_params import CthulhuRollParams
 from call_of_cthulhu.coc_sanity_roll_panel import CthulhuSanityRollPanel
 from call_of_cthulhu.coc_skills_panel import CthulhuSkillsPanel
 from call_of_cthulhu.coc_stats_panel import CthulhuStatsPanel
+from call_of_cthulhu.coc_combat_roll_panel import CthulhuCombatRollPanel
 from game.roll_result import RollResult
 from panels.main_menu_panel import MainMenuPanel
 from panels.panel_pool import PanelPool
@@ -109,8 +110,17 @@ class CthulhuGame:
                 callback=lambda b: self.open_panel(context, "sanity"),
             ),
             LightTouchButton(
-                "exit",
+                "combat",
                 BUTTON_LEFT,
+                BUTTON_RIGHT + 60,
+                BUTTON_WIDTH,
+                BUTTON_HEIGHT,
+                "Combat",
+                callback=lambda b: self.open_panel(context, "combat"),
+            ),
+            LightTouchButton(
+                "exit",
+                BUTTON_RIGHT,
                 BUTTON_RIGHT + 60,
                 BUTTON_WIDTH,
                 BUTTON_HEIGHT,
@@ -128,6 +138,7 @@ class CthulhuGame:
         pool.register_factory(
             "characteristics", lambda: CthulhuCharacteristicsPanel(self, context)
         )
+        pool.register_factory("combat", lambda: CthulhuCombatRollPanel(self, context))
         pool.register_factory("stats", lambda: CthulhuStatsPanel(self, context))
         pool.register_factory("equipment", lambda: CthulhuEquipmentPanel(self, context))
         pool.register_factory("sanity", lambda: CthulhuSanityRollPanel(self, context))
@@ -201,3 +212,53 @@ class CthulhuGame:
             return None  # Account for fumble
         cost = result.roll - threshold
         return cost if cost > 0 else None
+
+    @classmethod
+    def roll_damage(cls, params: CthulhuRollParams):
+        pass
+
+    def _parse_damage_spec(self, weapon):
+        """
+        Returns (dice_list, wants_db)
+          - dice_list: list of (num, sides)
+          - wants_db: True if the spec includes 'db'
+        Accepts weapon['Damage'] as:
+          - string like '1d8+db' or '1d6+1d4'
+          - tuple (num, sides)
+          - list of tuples [(num, sides), ...]
+        """
+        wants_db = False
+        dmg = weapon.get("Damage")
+
+        if dmg is None:
+            return ([], False)
+
+        # string like "1d8+db" or "1d6+1d4"
+        if isinstance(dmg, str):
+            s = dmg.replace(" ", "").lower()
+            parts = [p for p in s.split("+") if p]
+            dice = []
+            for p in parts:
+                if p == "db":
+                    wants_db = True
+                    continue
+                if "d" in p:
+                    n_str, s_str = p.split("d", 1)
+                    try:
+                        n = int(n_str) if n_str else 1
+                        sides = int(s_str)
+                        dice.append((n, sides))
+                    except ValueError:
+                        # ignore malformed segment
+                        continue
+                else:
+                    # Support constants like "+1" → (1,1) and "-1" → (-1,1)
+                    try:
+                        k = int(p)
+                        dice.append((k, 1))
+                    except ValueError:
+                        continue
+            return (dice, wants_db)
+
+        # Non-string formats aren’t expected by contract; return empty
+        return ([], False)
