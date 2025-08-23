@@ -7,7 +7,6 @@ from call_of_cthulhu.coc_combat_result_panel import CthulhuCombatResultPanel
 
 
 class CthulhuCombatRollPanel(BasePanel, PanelNavigationMixin):
-    # Match Skill panel behavior
     PARAM_KEYS = ["Bonus", "Penalty", "Difficulty", "Confirm"]
     __slots__ = (
         "game",
@@ -20,6 +19,7 @@ class CthulhuCombatRollPanel(BasePanel, PanelNavigationMixin):
         "difficulty",
         "confirm_selected",
         "_diffs",
+        "_warning_text",
     )
 
     def __init__(self, game, context):
@@ -55,6 +55,7 @@ class CthulhuCombatRollPanel(BasePanel, PanelNavigationMixin):
         self.penalty = 0
         self.difficulty = "Normal"
         self.confirm_selected = False
+        self._warning_text = ""
 
     def _init_labels(self):
         """Initialize Label objects once and reuse them."""
@@ -99,15 +100,29 @@ class CthulhuCombatRollPanel(BasePanel, PanelNavigationMixin):
                     return v[k]
         return 0
 
+    def _warn(self, msg: str):
+        self._warning_text = msg
+        self.render_labels()
+
     def render_labels(self):
         y = 10
-        # Two-line header to avoid overflow
-        self.labels[0].text = "Weapon: %s" % self._weapon_name()
-        self.labels[0].y = y
-        y += 20
-        self.labels[1].text = "DMG: %s" % self._weapon_damage_str()
-        self.labels[1].y = y
-        y += 20
+        if self._warning_text:
+            self.labels[0].text = self._warning_text
+            self.labels[0].y = y
+            y += 20
+            # Keep DMG line blank while warning is visible
+            self.labels[1].text = ""
+            self.labels[1].y = y
+            y += 20
+        else:
+            # Two-line header to avoid overflow
+            self.labels[0].text = "Weapon: %s" % self._weapon_name()
+            self.labels[0].y = y
+            y += 20
+            self.labels[1].text = "DMG: %s" % self._weapon_damage_str()
+            self.labels[1].y = y
+            y += 20
+
         param_dict = {
             "Bonus": self.bonus,
             "Penalty": self.penalty,
@@ -161,7 +176,7 @@ class CthulhuCombatRollPanel(BasePanel, PanelNavigationMixin):
     def _perform_roll(self):
         wname = self._weapon_name()
         if wname == "—":
-            self.context.toast("Equip a weapon first (Equipment).")
+            self._warn("Equip a weapon first!")
             return
 
         base_val = self._get_skill_val_for_weapon(wname)
@@ -217,6 +232,11 @@ class CthulhuCombatRollPanel(BasePanel, PanelNavigationMixin):
                     increment=(current_position > self.last_encoder_position)
                 )
             self.last_encoder_position = current_position
+
+            # Clear an warning on next user interaction
+            if self._warning_text:
+                self._warning_text = ""
+                self.render_labels()
 
         # When we're finally ready to roll
         if self.mode == "select" and self.confirm_selected:
