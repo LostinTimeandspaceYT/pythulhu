@@ -23,18 +23,22 @@ Check here to see if your TTRPG of choice is supported and what features are com
 
 ### Call of Cthulhu
 
-Feautres:
+Features:
+
 - [x] Loads character sheets via `JSON`.
 - [x] Make skill rolls
 - [x] Make charactertisic rolls
-- [x] Marks skills for improvement 
+- [x] Marks skills for improvement
 - [x] Added Panel for handling sanity rolls
-- [x] Added Logic to save character on exit. 
+- [x] Added Logic to save character on exit.
 - [x] Created panel for selecting equipped weapon
 - [x] Add panel for development phase
+- [x] Add panel for handling combat
+
+Future Updates:
+
 - [ ] Add Movement Rate
 - [ ] Add Logic to deal with injuries and insanity flags
-- [ ] Add panel for handling combat
 - [ ] Add panel for inventory management
 
 ### Pulp Cthulhu
@@ -96,7 +100,7 @@ Doesn't matter which one you choose.
 
 ### SD Card set up
 
-> [!note]  
+> [!note]
 > TODO: Package dependencies in future release
 
 - clone the repo
