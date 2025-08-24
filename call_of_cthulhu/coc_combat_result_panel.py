@@ -35,7 +35,7 @@ class CthulhuCombatResultPanel(BasePanel):
         wname = (self.weapon or {}).get("Name", "—")
         lines = []
         lines.append(f"Attack: {wname}")
-        lines.append(f"Roll: {self.result.roll} — {self.result.outcome}")
+        lines.append(f"Roll: {self.result.roll} {self.result.outcome}")
         if self.damage is not None:
             lines.append(f"Damage: {self.damage}")
         else:

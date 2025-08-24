@@ -182,7 +182,7 @@ class CthulhuGame:
 
     @classmethod
     def is_success(cls, result: RollResult, params: CthulhuRollParams):
-        return result.success_level >= cls.DIFFICULTY_LEVELS[params.difficulty]
+        return result.passed(difficulty=cls.DIFFICULTY_LEVELS[params.difficulty])
 
     @classmethod
     def evaluate_roll(cls, roll, params: CthulhuRollParams) -> RollResult:
@@ -215,50 +215,8 @@ class CthulhuGame:
 
     @classmethod
     def roll_damage(cls, params: CthulhuRollParams):
-        pass
-
-    def _parse_damage_spec(self, weapon):
-        """
-        Returns (dice_list, wants_db)
-          - dice_list: list of (num, sides)
-          - wants_db: True if the spec includes 'db'
-        Accepts weapon['Damage'] as:
-          - string like '1d8+db' or '1d6+1d4'
-          - tuple (num, sides)
-          - list of tuples [(num, sides), ...]
-        """
-        wants_db = False
-        dmg = weapon.get("Damage")
-
-        if dmg is None:
-            return ([], False)
-
-        # string like "1d8+db" or "1d6+1d4"
-        if isinstance(dmg, str):
-            s = dmg.replace(" ", "").lower()
-            parts = [p for p in s.split("+") if p]
-            dice = []
-            for p in parts:
-                if p == "db":
-                    wants_db = True
-                    continue
-                if "d" in p:
-                    n_str, s_str = p.split("d", 1)
-                    try:
-                        n = int(n_str) if n_str else 1
-                        sides = int(s_str)
-                        dice.append((n, sides))
-                    except ValueError:
-                        # ignore malformed segment
-                        continue
-                else:
-                    # Support constants like "+1" → (1,1) and "-1" → (-1,1)
-                    try:
-                        k = int(p)
-                        dice.append((k, 1))
-                    except ValueError:
-                        continue
-            return (dice, wants_db)
-
-        # Non-string formats aren’t expected by contract; return empty
-        return ([], False)
+        if params.extra_dice is None:
+            # Standard fighting brawl roll
+            return CthulhuDice.roll(1, 3)
+        else:
+            return CthulhuDice.roll_multiple(params.extra_dice)

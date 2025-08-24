@@ -108,6 +108,56 @@ class CthulhuCharacter(PlayerCharacter):
         else:
             raise IndexError("Invalid weapon selection")
 
+    def get_weapon_skill_val(self):
+        skill_name = self.current_weapon.get("Skill")
+        return self.get_value_at(skill_name) if skill_name else 0
+
+    def get_weapon_dice(self):
+        """
+        Returns extra dice needed to roll for damage
+          - dice_list: list of (num, sides)
+          - If db if found, adds db to list
+        Accepts weapon['Damage'] as:
+          - string like '1d8+db' or '1d6+1d4'
+          - tuple (num, sides)
+          - list of tuples [(num, sides), ...]
+        """
+
+        dmg = self.current_weapon.get("Damage")
+        if dmg is None:
+            return []
+
+        # string like "1d8+db" or "1d6+1d4"
+        if isinstance(dmg, str):
+            s = dmg.replace(" ", "").lower()
+            parts = [p for p in s.split("+") if p]
+            dice = []
+            for p in parts:
+                if p == "db":
+                    dice.append(self.db)
+                    continue
+                if "d" in p:
+                    n_str, s_str = p.split("d", 1)
+                    try:
+                        n = int(n_str) if n_str else 1
+                        sides = int(s_str)
+                        dice.append((n, sides))
+                    except ValueError:
+                        # ignore malformed segment
+                        continue
+                else:
+                    # Support constants like "+1" → (1,1) and "-1" → (-1,1)
+                    try:
+                        k = int(p)
+                        dice.append((k, 1))
+                    except ValueError:
+                        continue
+
+            return dice
+
+        # Non-string formats aren’t expected by contract; return empty
+        return ([], False)
+
     @property
     def characteristics(self):
         return self.sheet[CHAR]

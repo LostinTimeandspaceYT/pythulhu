@@ -85,21 +85,6 @@ class CthulhuCombatRollPanel(BasePanel, PanelNavigationMixin):
         dmg = w.get("Damage")
         return dmg if (isinstance(dmg, str) and len(dmg.strip()) > 0) else "—"
 
-    def _get_skill_val_for_weapon(self, wname: str) -> int:
-        """
-        Find a skill value matching the weapon name.
-        Supports dict skills with Current/Value.
-        """
-        skills = getattr(self.character, "skills", {})
-        v = skills.get(wname)
-        if isinstance(v, int):
-            return v
-        if isinstance(v, dict):
-            for k in ("Current", "Value", "current", "value"):
-                if k in v and isinstance(v[k], int):
-                    return v[k]
-        return 0
-
     def _warn(self, msg: str):
         self._warning_text = msg
         self.render_labels()
@@ -179,7 +164,8 @@ class CthulhuCombatRollPanel(BasePanel, PanelNavigationMixin):
             self._warn("Equip a weapon first!")
             return
 
-        base_val = self._get_skill_val_for_weapon(wname)
+        base_val = self.character.get_weapon_skill_val()
+        weapon_dice = self.character.get_weapon_dice()
 
         roll_params = CthulhuRollParams(
             name=wname,
@@ -188,8 +174,9 @@ class CthulhuCombatRollPanel(BasePanel, PanelNavigationMixin):
             penalty=self.penalty,
             difficulty=self.difficulty,
             can_spend_luck=True,
-            can_push=True,
+            can_push=False,
             can_improve=True,
+            extra_dice=weapon_dice if not None else [],
         )
 
         roll = self.game.roll_skill(self.bonus, self.penalty)
@@ -197,8 +184,7 @@ class CthulhuCombatRollPanel(BasePanel, PanelNavigationMixin):
 
         damage_total = None
         if self.game.is_success(result, roll_params):
-            dmg_params = CthulhuRollParams(name=wname, base_val=0, extra_tag="damage")
-            damage_total = self.game.roll_damage(dmg_params)
+            damage_total = self.game.roll_damage(roll_params)
 
         panel = CthulhuCombatResultPanel(
             self.game,
