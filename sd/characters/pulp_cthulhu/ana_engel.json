@@ -108,6 +108,7 @@
   "Weapons": {
     "Weapon 1": {
       "Name": "Brawl",
+      "Skill": "Fighting (Brawl)",
       "Damage": "1d3 + db",
       "num of attacks": 1,
       "Range": "",
@@ -116,6 +117,7 @@
     },
     "Weapon 2": {
       "Name": ".25 Derringer",
+      "Skill": "Handgun",
       "Damage": "1d6",
       "num of attacks": 1,
       "Range": "3 yards",

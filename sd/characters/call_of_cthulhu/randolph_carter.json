@@ -103,6 +103,7 @@
     "Weapons" : {
         "Weapon 1" : {
             "Name" : "Brawl",
+            "Skill": "Fighting (Brawl)",
             "Damage " : "1d3 + db",
             "num of attacks" : 1,
             "Range": "",
@@ -111,6 +112,7 @@
         },
         "Weapon 2" : {
             "Name" : "",
+            "Skill": "",
             "Damage " : "",
             "num of attacks" : 1,
             "Range": "",
@@ -119,6 +121,7 @@
         },
         "Weapon 3" : {
             "Name" : "",
+            "Skill": "",
             "Damage " : "",
             "num of attacks" : 1,
             "Range": "",
